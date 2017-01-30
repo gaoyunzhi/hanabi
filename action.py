@@ -4,6 +4,7 @@ class Action(object):
 		self.loc = None
 		self.color = None
 		self.number = None
+		self.locs = []
 
 	def __str__(self):
 		rep = "act:" + str(self.act) + " "
@@ -13,4 +14,6 @@ class Action(object):
 			rep += "color:" + str(self.color) + " "
 		if self.number != None:
 			rep += "number:" + str(self.number) + " "
+		if self.locs != []:
+			rep += "locs:" + str(self.locs) + " "
 		return str(rep)

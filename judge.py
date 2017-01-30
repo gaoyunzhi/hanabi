@@ -15,7 +15,7 @@ class Judge(object):
 	def takeDeck(self, deck):
 		self._deck = deck
 		self.desk = {}
-		self.discardedDeck = []
+		self.discardedDeck = {}
 		self.boom = 0
 		self.token = TOKEN_INIT
 		for c in COLOR:
@@ -38,12 +38,29 @@ class Judge(object):
 				action = player.act()		
 				if action.act in [ACTION_PLAY, ACTION_DISCARD]:
 					self._actRelatedToCard(player, action.act, action.loc)
+				elif action.act == ACTION_HINT:
+					self._populateLocs(action, player)
+					self.token -= 1
+				else:
+					raise Error("act not valid")
 				self.lastAct = action
 				print player.label, action
 				if self._isGameEnds():
 					break
 		self._gameEnds()
 	
+	def _populateLocs(self, action, player):
+		if action.act != ACTION_HINT:
+			raise Error("action must be hint to populate locs")
+		for other_player in self._players:
+			if other_player != player:
+				break
+		action.locs = []
+		for index, card in enumerate(self._hands[other_player]):
+			if action.number != None and card.number == action.number or \
+				action.color != None and card.color = action.color:
+				action.locs.append(index)
+
 	def _sendCard(self, player):
 		if not self._deck:
 			return
@@ -68,11 +85,21 @@ class Judge(object):
 		self._discard(card)
 
 	def _discard(self, card):
-		self.discardedDeck.append(card)
+		if not card in self.discardedDeck:
+			self.discardedDeck[card] = 0
+		self.discardedDeck[card] += 1
+		self.token += 1
 
-	def _isGameEnds(self):
+	def _isInvalidState(self):
+		if self.token > TOKEN_INIT or self.token < 0:
+			return True
 		if self.boom > BOOM_LIMIT:
 			return True	
+		return false
+
+	def _isGameEnds(self):
+		if self._isInvalidState():
+			return True
 		hands = self._hands.values()
 		if sum([len(h) for h in hands]) == \
 			(NUM_CARDS_IN_HAND - ROUND_AFTER_DECK_EMPTY) * len(hands):
@@ -92,11 +119,13 @@ class Judge(object):
 		for c in COLOR:
 			desk += c + str(self.desk[c]) + " "
 		print "desk: ", desk, 
-		print "discarded", [str(card) for card in self.discardedDeck],
+		print "discarded", 
+		for card, number in self.discardedDeck:
+			print card + ":" + str(number) + ", ",
 		print "boom:", self.boom 
 
 	def _getScore(self):
-		if self.boom > BOOM_LIMIT:
+		iif self._isInvalidState():
 			return 0
 		return sum(self.desk.values())
 
