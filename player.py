@@ -29,10 +29,12 @@ class Player(HanabiPlayerInterface) :
 	def _act(self):
 		self._othersHand = self._getOthersHand()
 		self._othersAct = self._judge.lastAct
-		self._meTodo, self._meDiscardLoc = \
-			self._updateFromHint(self._othersAct, self._meTodo, self._meDiscardLoc)
-		self._otherTodo, self._otherDiscardLoc = \
-			self._updateFromAct(self._othersAct, self._otherTodo, self._otherDiscardLoc)
+		if self._othersAct:
+			# if not the first round
+			self._meTodo, self._meDiscardLoc = \
+				self._updateFromHint(self._othersAct, self._meTodo, self._meDiscardLoc)
+			self._otherTodo, self._otherDiscardLoc = \
+				self._updateFromAct(self._othersAct, self._otherTodo, self._otherDiscardLoc)
 		if self._otherSafe() and self._getToPlay(self._meTodo):
 			return self._getToPlay(self._meTodo)
 		if self._getToPlay(self._otherTodo) or self._judge.token == 0:
@@ -93,6 +95,7 @@ class Player(HanabiPlayerInterface) :
 		return self._judge.getHands(self).values()[0]
 
 	def _canPlay(self, card):
+		print self._judge.desk
 		for c, number in self._judge.desk:
 			if card.color == c and card.number == number + 1:	
 				return True
@@ -127,7 +130,7 @@ class Player(HanabiPlayerInterface) :
 		for c, number in self._judge.desk:
 			if card.color == c and card.number == number + 1:	
 				return 0.2
-		if self._judge.discardedDeck[card] + 1 == 
+		if self._judge.discardedDeck[card] + 1 == \
 			DECK_DISTRIBUTION[card.color][card.number]:
 			# last card
 			return 0.2
