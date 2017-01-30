@@ -42,6 +42,19 @@ class Player(HanabiPlayerInterface) :
 			action = Action()
 			action.loc = self._meDiscardLoc
 			action.act = ACTION_DISCARD
+			return action
+		if len(self._othersHand) < NUM_CARDS_IN_HAND:
+			# last round, nothing to do
+			if self._judge.isTokenFull():
+				action = Action()
+				action.act = ACTION_HINT
+				action.number = self._othersHand[0].number
+				return action
+			else:
+				action = Action()
+				action.act = ACTION_DISCARD
+				action.loc = 0
+				return action
 		if self._getPlayHint(self._othersHand):
 			return self._getPlayHint(self._othersHand)
 		return self._getDiscardHint(self._othersHand)
@@ -108,6 +121,8 @@ class Player(HanabiPlayerInterface) :
 					hand[(index - 1 + NUM_CARDS_IN_HAND) % NUM_CARDS_IN_HAND].number
 				# TODO: deal with ambigious hints later
 				self._judge.populateLocs(action, self)
+				if action.locs[0] != (index - 1 + NUM_CARDS_IN_HAND) % NUM_CARDS_IN_HAND:
+					continue
 				return action
 
 	def _getDiscardHint(self, hand):

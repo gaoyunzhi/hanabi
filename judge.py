@@ -19,6 +19,7 @@ class Judge(object):
         self.boom = 0
         self.token = TOKEN_INIT
         self.lastAct = None
+        self._mute = False
         for c in COLOR:
             self.desk[c] = 0
 
@@ -45,7 +46,8 @@ class Judge(object):
                 else:
                     raise Error("act not valid")
                 self.lastAct = action
-                print player.label, action
+                if not self._mute:
+                    print player.label, action
                 if self._isGameEnds():
                     break
         self._gameEnds()
@@ -109,9 +111,11 @@ class Judge(object):
 
     def _gameEnds(self):
         self._printGameStatus()
-        print "Game Ends with score", self._getScore()
+        print "Game Ends with score", self.getScore()
 
     def _printGameStatus(self):
+        if self._mute:
+            return
         print "hands:",
         for player in self._players:
             print player.label, [str(card) for card in self._hands[player]], "  ",
@@ -126,7 +130,7 @@ class Judge(object):
         print "boom:", self.boom,
         print "token", self.token
 
-    def _getScore(self):
+    def getScore(self):
         if self._isInvalidState():
             return 0
         return sum(self.desk.values())
@@ -150,6 +154,9 @@ class Judge(object):
         hands = self._hands.copy()
         del hands[caller]
         return hands
+
+    def mute(self):
+        self._mute = True
 
 
 

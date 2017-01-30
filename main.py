@@ -23,9 +23,11 @@ for (dirpath, dirnames, filenames) in walk(TEST_DIRECTORY):
 
 all_filenames = [(d, f) for (d, f) in all_filenames if f.endswith('.txt')]
 
-example_file = all_filenames[0][0] + all_filenames[0][1]
-
-judge = Judge()
-judge.takeDeck(getDeck(example_file))
-judge.takePlayer([Player(judge, "小娘炮"), Player(judge, "云云哥哥")])
-judge.start()
+for file in all_filenames:
+	example_file = file[0] + file[1]
+	judge = Judge()
+	judge.takeDeck(getDeck(example_file))
+	judge.takePlayer([Player(judge, "小娘炮"), Player(judge, "云云哥哥")])
+	judge.mute()
+	judge.start()
+	# print judge.getScore()
