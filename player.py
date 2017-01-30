@@ -24,7 +24,8 @@ class Player(HanabiPlayerInterface) :
 		self._meTodo, self._meDiscardLoc = \
 			self._updateFromAct(act, self._meTodo, self._meDiscardLoc)
 		self._otherTodo, self._otherDiscardLoc = \
-			self._updateFromAct(act, self._otherTodo, self._otherDiscardLoc)
+			self._updateFromHint(act, self._otherTodo, self._otherDiscardLoc)
+		return act
 
 	def _act(self):
 		self._othersHand = self._getOthersHand()
@@ -47,7 +48,7 @@ class Player(HanabiPlayerInterface) :
 
 	def _updateFromHint(self, act, oldTodo, discardLoc):
 		if act.act != ACTION_HINT:
-			return
+			return oldTodo, discardLoc
 		if act.number != None:
 			oldTodo[(act.locs[0] + 1) % NUM_CARDS_IN_HAND] = ACTION_PLAY
 		if act.color != None:
@@ -59,7 +60,7 @@ class Player(HanabiPlayerInterface) :
 		return True
 
 	def _getToPlay(self, todoList):
-		for loc, todo in todoList:
+		for loc, todo in todoList.iteritems():
 			if todo == ACTION_PLAY:
 				action = Action()
 				action.act = ACTION_PLAY
@@ -67,8 +68,7 @@ class Player(HanabiPlayerInterface) :
 				return action
 
 	def _updateFromAct(self, act, oldTodo, oldLoc):
-		return [self._updateTodoFromAct(act, oldTodo), 
-				self._updateDiscardLocFromAct(act, oldLoc)]
+		return self._updateTodoFromAct(act, oldTodo), self._updateDiscardLocFromAct(act, oldLoc)
 
 	def _updateDiscardLocFromAct(self, act, oldLoc):
 		if act.loc == None:
@@ -81,7 +81,7 @@ class Player(HanabiPlayerInterface) :
 		if act.loc == None:
 			return
 		newTodoList = {}
-		for oldLoc, todo in todoList:
+		for oldLoc, todo in todoList.iteritems():
 			if oldLoc == act.loc:
 				continue
 			if oldLoc < act.loc:
@@ -95,8 +95,7 @@ class Player(HanabiPlayerInterface) :
 		return self._judge.getHands(self).values()[0]
 
 	def _canPlay(self, card):
-		print self._judge.desk
-		for c, number in self._judge.desk:
+		for c, number in self._judge.desk.iteritems():
 			if card.color == c and card.number == number + 1:	
 				return True
 
@@ -108,6 +107,7 @@ class Player(HanabiPlayerInterface) :
 				action.number = \
 					hand[(index - 1 + NUM_CARDS_IN_HAND) % NUM_CARDS_IN_HAND].number
 				# TODO: deal with ambigious hints later
+				self._judge.populateLocs(action, self)
 				return action
 
 	def _getDiscardHint(self, hand):

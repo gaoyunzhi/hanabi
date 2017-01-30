@@ -40,7 +40,7 @@ class Judge(object):
                 if action.act in [ACTION_PLAY, ACTION_DISCARD]:
                     self._actRelatedToCard(player, action.act, action.loc)
                 elif action.act == ACTION_HINT:
-                    self._populateLocs(action, player)
+                    self.populateLocs(action, player)
                     self.token -= 1
                 else:
                     raise Error("act not valid")
@@ -50,7 +50,7 @@ class Judge(object):
                     break
         self._gameEnds()
     
-    def _populateLocs(self, action, player):
+    def populateLocs(self, action, player):
         if action.act != ACTION_HINT:
             raise Error("action must be hint to populate locs")
         for other_player in self._players:
