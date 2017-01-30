@@ -79,7 +79,7 @@ class Player(HanabiPlayerInterface) :
 
 	def _updateTodoFromAct(self, act, todoList):
 		if act.loc == None:
-			return
+			return todoList
 		newTodoList = {}
 		for oldLoc, todo in todoList.iteritems():
 			if oldLoc == act.loc:
@@ -111,7 +111,7 @@ class Player(HanabiPlayerInterface) :
 				return action
 
 	def _getDiscardHint(self, hand):
-		discardAvg = avg([self._canDiscard(card) for card in hand])
+		discardAvg = sum([self._canDiscard(card) for card in hand]) / len(hand)
 
 		for index, card in enumerate(hand):
 			if self._canDiscard(card) > discardAvg - 0.000001: # precision
@@ -120,17 +120,18 @@ class Player(HanabiPlayerInterface) :
 				action.color = \
 					hand[(index - 1 + NUM_CARDS_IN_HAND) % NUM_CARDS_IN_HAND].color
 				# TODO: deal with ambigious hints later
+				self._judge.populateLocs(action, self)
 				return action
 
 	# return a rating from 0 to 1
 	def _canDiscard(self, card):
-		for c, number in self._judge.desk:
+		for c, number in self._judge.desk.iteritems():
 			if card.color == c and card.number <= number:	
 				return 1
-		for c, number in self._judge.desk:
+		for c, number in self._judge.desk.iteritems():
 			if card.color == c and card.number == number + 1:	
 				return 0.2
-		if self._judge.discardedDeck[card] + 1 == \
+		if self._judge.discardedDeck.get(str(card), 0) + 1 == \
 			DECK_DISTRIBUTION[card.color][card.number]:
 			# last card
 			return 0.2

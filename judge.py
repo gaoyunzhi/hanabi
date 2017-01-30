@@ -35,7 +35,7 @@ class Judge(object):
         while not self._isGameEnds():
             for player in self._players:
                 self._printGameStatus()
-                self._getch()
+                #self._getch()
                 action = player.act()       
                 if action.act in [ACTION_PLAY, ACTION_DISCARD]:
                     self._actRelatedToCard(player, action.act, action.loc)
@@ -86,9 +86,9 @@ class Judge(object):
         self._discard(card)
 
     def _discard(self, card):
-        if not card in self.discardedDeck:
-            self.discardedDeck[card] = 0
-        self.discardedDeck[card] += 1
+        if not str(card) in self.discardedDeck:
+            self.discardedDeck[str(card)] = 0
+        self.discardedDeck[str(card)] += 1
         self.token += 1
 
     def _isInvalidState(self):
@@ -121,9 +121,10 @@ class Judge(object):
             desk += c + str(self.desk[c]) + " "
         print "desk: ", desk, 
         print "discarded", 
-        for card, number in self.discardedDeck:
-            print card + ":" + str(number) + ", ",
-        print "boom:", self.boom 
+        for card, number in self.discardedDeck.iteritems():
+            print str(card) + ":" + str(number) + ", ",
+        print "boom:", self.boom,
+        print "token", self.token
 
     def _getScore(self):
         if self._isInvalidState():
