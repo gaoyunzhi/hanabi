@@ -16,6 +16,7 @@ class Judge(object):
     def takeDeck(self, deck):
         self._deck = deck
         self.desk = {}
+        self.actsAfterEmpty = 0
         self.discardedDeck = {}
         self.boom = 0
         self.token = TOKEN_INIT
@@ -37,8 +38,10 @@ class Judge(object):
             for player in self._players:
                 self._printGameStatus()
                 if self.byStep: 
-                    self._getch()
-                action = player.act()       
+                    c = self._getch()
+                    if c == "c":
+                        exit(0)
+                action = player.act()  
                 if action.act in [ACTION_PLAY, ACTION_DISCARD]:
                     self._actRelatedToCard(player, action.act, action.loc)
                 elif action.act == ACTION_HINT:
@@ -49,6 +52,8 @@ class Judge(object):
                 self.lastAct = action
                 if not self.mute:
                     print player.label, action
+                if not self._deck:     
+                    self.actsAfterEmpty += 1
                 if self._isGameEnds():
                     break
         self._gameEnds()
@@ -105,8 +110,7 @@ class Judge(object):
         if self._isInvalidState():
             return True
         hands = self._hands.values()
-        if sum([len(h) for h in hands]) == \
-            (NUM_CARDS_IN_HAND - ROUND_AFTER_DECK_EMPTY) * len(hands):
+        if self.actsAfterEmpty == ROUND_AFTER_DECK_EMPTY  * len(self._players):
             return True
         return False
 
@@ -156,4 +160,7 @@ class Judge(object):
         del hands[caller]
         return hands
 
+    def mute(self):
+        self.mute = True
+        self.byStep = False # no point of mute and by step
 

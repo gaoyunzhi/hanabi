@@ -6,6 +6,7 @@ from const import ACTION_DISCARD
 from action import Action
 from const import DECK_DISTRIBUTION
 from const import NUM_CARDS_IN_HAND
+from card import Card
 
 class CheatingPlayer(HanabiPlayerInterface):
 	def __init__(self, judge, label):
@@ -27,7 +28,7 @@ class CheatingPlayer(HanabiPlayerInterface):
 		if self._judge.getScore() < 20 and self._getPotentialDiscardAction():
 			return self._getPotentialDiscardAction()		
 
-		if self._judge.token > 0:
+		if self._judge.token > 0 and self._judge.lastAct.act != ACTION_HINT:
 			return self._getHintAction()
 		if self._judge.token == 0 and self._getPotentialDiscardAction():
 			return self._getPotentialDiscardAction()
@@ -46,7 +47,7 @@ class CheatingPlayer(HanabiPlayerInterface):
 	def _getPotentialPlayAction(self):
 		for index, card in enumerate(self._myHand):
 			if not self._canPlay(card):
-				contiune
+				continue
 			if self._blockOther(card):
 				action = Action()
 				action.act = ACTION_PLAY
@@ -62,8 +63,7 @@ class CheatingPlayer(HanabiPlayerInterface):
 	def _blockOther(self, card):
 		if str(card) in [str(c) for c in self._otherHand]:
 			return True
-		cardNext = card.copy()
-		card.number += 1
+		cardNext = Card(card.number + 1, card.color)
 		if str(card) in [str(c) for c in self._otherHand]:
 			return True
 
@@ -78,14 +78,14 @@ class CheatingPlayer(HanabiPlayerInterface):
 	def _getHintAction(self):
 		action = Action()
 		action.act = ACTION_HINT
-		action.number = hand1[0].number
+		action.number = self._otherHand[0].number
 		return action
 
 	def _canDiscard(self, card):
 		for c, number in self._judge.desk.iteritems():
 			if card.color == c and card.number <= number:	
 				return True	
-		if count([str(c) == str(card) for c in self._myHand]) > 1:
+		if sum([str(c) == str(card) for c in self._myHand]) > 1:
 			return True
 		return False
 
@@ -96,7 +96,7 @@ class CheatingPlayer(HanabiPlayerInterface):
 		for c, number in self._judge.desk.iteritems():
 			if card.color == c and card.number == number + 1:	
 				return 0.0
-		if count([str(c) == str(card) for c in self._otherHand]) > 0:
+		if sum([str(c) == str(card) for c in self._otherHand]) > 0:
 			return 0.8
 		if self._judge.discardedDeck.get(str(card), 0) + 1 == \
 			DECK_DISTRIBUTION[card.color][card.number]:
