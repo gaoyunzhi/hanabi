@@ -10,7 +10,8 @@ import sys, tty, termios, os
 
 class Judge(object):
     def __init__(self):
-        pass
+        self.byStep = False
+        self.mute = False
 
     def takeDeck(self, deck):
         self._deck = deck
@@ -19,7 +20,6 @@ class Judge(object):
         self.boom = 0
         self.token = TOKEN_INIT
         self.lastAct = None
-        self._mute = False
         for c in COLOR:
             self.desk[c] = 0
 
@@ -36,7 +36,8 @@ class Judge(object):
         while not self._isGameEnds():
             for player in self._players:
                 self._printGameStatus()
-                #self._getch()
+                if self.byStep: 
+                    self._getch()
                 action = player.act()       
                 if action.act in [ACTION_PLAY, ACTION_DISCARD]:
                     self._actRelatedToCard(player, action.act, action.loc)
@@ -46,7 +47,7 @@ class Judge(object):
                 else:
                     raise Error("act not valid")
                 self.lastAct = action
-                if not self._mute:
+                if not self.mute:
                     print player.label, action
                 if self._isGameEnds():
                     break
@@ -114,7 +115,7 @@ class Judge(object):
         print "Game Ends with score", self.getScore()
 
     def _printGameStatus(self):
-        if self._mute:
+        if self.mute:
             return
         print "hands:",
         for player in self._players:
@@ -154,10 +155,5 @@ class Judge(object):
         hands = self._hands.copy()
         del hands[caller]
         return hands
-
-    def mute(self):
-        self._mute = True
-
-
 
 

@@ -5,7 +5,7 @@ from random import shuffle
 import os
 
 SHUFFLE_TIMES = 100
-TEST_FILE_NUM = 10
+TEST_FILE_NUM = 100
 FILE_NAME_LENGH = 2
 
 def genDeck():
