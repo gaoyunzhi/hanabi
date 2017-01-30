@@ -25,7 +25,7 @@ class CheatingPlayer(HanabiPlayerInterface):
 		if self._judge.isTokenFull():
 			return self._getHintAction()
 
-		if self._judge.getScore() < 20 and self._getPotentialDiscardAction():
+		if self._judge.getScore() < 17 and self._getPotentialDiscardAction():
 			return self._getPotentialDiscardAction()		
 
 		if self._judge.token > 0 and self._judge.lastAct.act != ACTION_HINT:
