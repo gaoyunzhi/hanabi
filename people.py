@@ -1,2 +1,0 @@
-class People(object):
-	

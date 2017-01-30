@@ -1,12 +1,18 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from judge import Judge
 from player import Player
 from const import TEST_DIRECTORY
 from os import walk
+from card import Card
 
 def getDeck(example_file):
 	f = open(example_file)
-	deck = f.readlines()
-	deck = [card.strip() for card in deck]
+	raw_deck = f.readlines()
+	deck = []
+	for card in raw_deck:
+		deck.append(Card(int(card[0]), card[1]))
 	f.close()
 	return deck
 
@@ -21,7 +27,5 @@ example_file = all_filenames[0][0] + all_filenames[0][1]
 
 judge = Judge()
 judge.takeDeck(getDeck(example_file))
-player1 = Player(judge)
-player2 = Player(judge)
-judge.takePlayer(player1, player2)
+judge.takePlayer([Player(judge, "小娘炮"), Player(judge, "云云哥哥")])
 judge.start()
