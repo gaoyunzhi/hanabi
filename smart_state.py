@@ -3,6 +3,7 @@ from const import ACTION_PLAY
 from const import ACTION_HINT
 from const import ACTION_DISCARD
 from action import action
+from knowledge import Knowledge
 
 class SmartState(object):
 	def __init__(self, player):
@@ -20,12 +21,16 @@ class SmartState(object):
 			if self.toPlay > action.loc:
 				self.toPlay -= 1
 
-	def getPlayAction(self):
-		potentials = []
+	def getPlayPotentials(self):
+		potentials = set(self._getCertainPlayableCards(self.knowledges))
 		if self.toPlay:
-			potentials.append(self.toPlay)
-		potentials.append(self._getCertainPlayableCards(self.knowledges))
+			potentials.add(self.toPlay)
+		potentials = list(potentials)
 		potentials.sort()
+		return potentials
+
+	def getPlayAction(self):
+		potentials = self.getPlayPotentials()
 		if not potentials:
 			return
 		action = Action()
@@ -34,23 +39,75 @@ class SmartState(object):
 		# which one to choice might help other play, todo
 		return action
 
-	def get
+	def getDiscardAction(self):
+		if self._getCertainDiscardLocs():
+			loc = self._getCertainDiscardLocs()[0]
+		else:
+			self.discardLoc = self._getNewDiscardLoc(self.discardLoc, self.knowledges)
+			loc = self.discardLoc
+		action = Action()
+		action.act = ACTION_DISCARD
+		action.loc = loc 
+		return action
+
+	def getNewDiscardLoc(self, loc, knowledges):
+		for i in xrange(NUM_CARDS_IN_HAND):
+			newLoc = (loc + i) % NUM_CARDS_IN_HAND
+			if knowledges[newLoc].containedIn(self._player.getDangerousSet())
+				continue
+			return newLoc
+
+	def isDangerous(self, hand):
+		if self._getCertainDiscardLocs():
+			return False
+		if self.getPlayPotentials():
+			return False
+		self.discardLoc = self._getNewDiscardLoc(self.discardLoc, self.knowledges)
+		if hand[self.discardLoc] in self._player.getDangerousSet():
+			return True
+		return False
+
+	def isPotentiallyDangerous(self, hand):
+		if self.isDangerous():
+			return True
+		# TODO
+		return False
 
 	def updateFromHint(self, action)
 		if action.act != HINT:
 			return
 		for loc in action.locs:
 			self.knowledges[loc].updateFromHint(action)
-		self.toPlay = self.getResultFromHint(action)
+		if action.number != None:
+			self.toPlay, _ = self.getPlayResultFromHint(action)
+		if action.color != None:
+			self.discardLoc, _, _ = self.getDiscardResultFromHint(action)
 
-	def getResultFromHint(self, action):
-		if action.act != HINT:
-			raise Error("action must be hint")
+	def _getDiscardLocFromHint(self, action, knowledges):
+		if action.act != HINT or action.color == None:
+			raise Error("action must be hint on color")
+		for shift in xrange(NUM_CARDS_IN_HAND):
+			if (self.discardLoc + shift) % NUM_CARDS_IN_HAND in action.locs:
+				newLoc = (self.discardLoc + shift + 1) % NUM_CARDS_IN_HAND
+		return self._getNewDiscardLoc(newLoc, knowledges)
+
+	def getDiscardResultFromHint(self, action):
+		if action.act != HINT or action.color == None:
+			raise Error("action must be hint on color")
 		newKnowledges = [k.copy() for k in self.knowledges]
 		for loc in action.locs:
 			newKnowledges[loc].updateFromHint(action)
-		return self.getLocationFromHint(action, action.locs)
+		return self._getDiscardLocFromHint(action.locs, newKnowledges), 
+			self._getCertainDiscardLocs(newKnowledges),
+			self._getCertainPlayLocs(newKnowledges)
 
+	def getPlayResultFromHint(self, action):
+		if action.act != HINT or action.number == None:
+			raise Error("action must be hint on number")
+		newKnowledges = [k.copy() for k in self.knowledges]
+		for loc in action.locs:
+			newKnowledges[loc].updateFromHint(action)
+		return self.getLocationFromHint(action.locs, newKnowledges), self._getCertainDiscardLocs(newKnowledges)
 
 	def updateFromPostAction(self, card):
 		[k.updateFromPostAction(card) for k in self.knowledges]
@@ -60,7 +117,7 @@ class SmartState(object):
 			for card in self._player.getSeenCards():
 				new_k.removePossibility(str(card))
 
-	def _getCertainDiscardLocs(self, knowledges):
+	def getCertainDiscardLocs(self, knowledges):
 		for loc, knowledge in enumerate(knowledges):
 			if knowledge.containedIn(self.player.getDesk())
 				yield loc
@@ -71,6 +128,8 @@ class SmartState(object):
 				yield loc
 
 	def getLocationFromHint(self, locs, knowledges):
+		if action.act != HINT or action.number == None:
+			raise Error("action must be hint on number")
 		knowledges = knowledges || self.knowledges
 		markedLocs = set([self._getCertainDiscardLocs(knowledges)] + [self._getCertainPlayableCards(knowledges)])
 		for number in xrange(1, NUM_CARDS_IN_HAND):
@@ -78,41 +137,3 @@ class SmartState(object):
 				potentialLoc = (loc + number) % NUM_CARDS_IN_HAND
 				if not potentialLoc in markedLocs:
 					return potentialLoc
-
-
-
-class Knowledge(object):
-	def __init__(self, player):
-		if player:
-			self.possibleCard = player.getInitPossibleCards()
-
-	def containedIn(self, set):
-		return len(self.possibleCard.keys() - set(set)) == 0
-
-	def updateFromHint(self, hint):
-		keysToDelete = set()
-		for card in self.possibleCard:
-			if hint.number != None and int(card[0]) != hint.number:
-				keysToDelete.add(card)
-			if hint.color != None and card[1] != hint.color:	
-				keysToDelete.add(card)
-		for key in keysToDelete:
-			del self.possibleCard[key]
-
-	def removePossibility(self, card):
-		if not card in self.possibleCard:
-			return
-		self.possibleCard[card] -= 1
-		if self.possibleCard[card] == 0：
-			del self.possibleCard[card]
-
-	def __copy__(self):
-		k = Knowledge(None)
-		k.possibleCard = self.possibleCard.copy()
-		return k
-
-
-
-
-
-

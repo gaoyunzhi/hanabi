@@ -35,12 +35,53 @@ class SmartPlayer(HanabiPlayerInterface) :
 		if (not (self._otherState.isDangerous() and self._judge.token > 0)) and \
 			self._myState.getPlayAction():
 			return self._myState.getPlayAction()
-		if self._judge.token > 0 and self._otherState.hasNothingToPlay() and \
-			self._otherState.getPlayHint(self._getOthersHand()):
-			return self._otherState.getPlayHint(self._getOthersHand())
+		if self._judge.token > 0 and not self._otherState.getPlayAction() and \
+			self.getPlayHint():
+			return self.getPlayHint()
 		if (self._otherState.isPotentiallyDangerous() and self._judge.token > 0) or self._judge.isTokenFull():
-			return self._otherState.getDiscardHint(self._getOthersHand())
+			return self.getDiscardHint()
 		return self._myState.getDiscardAction():
+
+
+	def getPlayHint(self):
+		hand = self._getOthersHand()
+		bestAction = None
+		bestScore = 0
+		for card in hand:
+			action = Action()
+			action.number = card.number
+			action.act = ACTION_HINT
+			self._judge.populateLocs(action, self)
+			toPlay, certainPlays = self._otherState.getPlayResultFromHint(action)
+			if toPlay == None or not (hand[toPlay] in self.getCanPlaySet()):
+				continue
+			plays = set(certainPlays)
+			plays.add(toPlay)
+			score = len(plays)
+			if score > bestScore:
+				bestScore = score
+				bestAction = action
+		return bestAction
+
+	def getDiscardHint(self, hand):
+		hand = self._getOthersHand()
+		bestAction = None
+		bestScore = 0
+		for card in hand:
+			action = Action()
+			action.color = card.color
+			action.act = ACTION_HINT
+			self._judge.populateLocs(action, self)
+			newDiscardLoc, certainDiscards, certainPlays = \
+				self._otherState.getDiscardResultFromHint(action)
+			score = len(certainPlays) * 5 + len(certainDiscards)
+			if len(certainPlays) == 0 and len(certainDiscards) == 0:
+				if hand[newDiscardLoc] in self.getDangerousSet():
+					continue
+			if score > bestScore:
+				bestScore = score
+				bestAction = action 
+		return bestAction
 
 	def getCanPlaySet(self):
 		can_play = set()
@@ -69,6 +110,17 @@ class SmartPlayer(HanabiPlayerInterface) :
 			for n in xrange(1, number + 1):
 				desk.append(Card(n, c))
 		return desk
+
+	def getDangerousSet(self):
+		res = set()
+		for c in COLOR:
+			for n in xrange(self._judge.desk[c] + 1, len(DECK_DISTRIBUTION[c])):
+				if self._judge.discardedDeck.get(str(n) + c, 0) + 1 == \
+					DECK_DISTRIBUTION[c][n]:
+					res.add(str(n) + c)
+				if self._judge.discardedDeck.get(str(n) + c, 0) == DECK_DISTRIBUTION[c][n]:
+					break
+		return res
 
 	def _getOthersHand(self):
 		return self._judge.getHands(self).values()[0]
