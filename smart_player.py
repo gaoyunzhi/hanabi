@@ -7,6 +7,7 @@ from action import Action
 from const import DECK_DISTRIBUTION
 from const import NUM_CARDS_IN_HAND
 from const import COLOR
+from card import Card
 from smart_state import SmartState
 
 class SmartPlayer(HanabiPlayerInterface) :
@@ -16,27 +17,31 @@ class SmartPlayer(HanabiPlayerInterface) :
 		self._myState = SmartState(self)
 		self._otherState = SmartState(self)
 
-	def postAct(self, action, actionResult):
-		if action in [ACTION_PLAY, ACTION_DISCARD]:
-			self._myState.updateFromActionResult(actionResult)
-			self._otherState.updateFromActionResult(actionResult)
+	def postAct(self, action, actionResult, player_index):
+		if action.act in [ACTION_PLAY, ACTION_DISCARD]:
+			self._myState.updateFromPostActionWithCard(action, actionResult)
+			self._otherState.updateFromPostActionWithCard(action, actionResult)
+			if player_index == 1:
+				self._otherState.updateOwnAction(action, actionResult)
+			else:
+				self._myState.updateOwnAction(action, actionResult)
 			# deal with boom?
-
-	def act(self):
-		action = self._act()
-		self.populateLocs(action)
-		self._myState.updateFromAction(action)
-		self._otherState.updateFromHint(action)
-		return action
+		if action.act == ACTION_HINT:
+			if player_index == 1:
+				self._myState.updateFromHint(action)
+			else:
+				if player_index != 0:
+					raise Exception("only support two players")
+				self._otherState.updateFromHint(action)
 
 	def populateLocs(self, action):
 		self._judge.populateLocs(action, self)
 
-	def _act(self):
+	def act(self):
 		if (not (self._otherState.isDangerous(self._getOthersHand()) and self._judge.token > 0)) and \
 			self._myState.getPlayAction():
 			return self._myState.getPlayAction()
-		if self._judge.token > 0 and not self._otherState.getPlayAction() and \
+		if self._judge.token > 0 and (not self._otherState.getPlayAction()) and \
 			self.getPlayHint():
 			return self.getPlayHint()
 		if (self._otherState.isPotentiallyDangerous(self._getOthersHand()) and self._judge.token > 0) or self._judge.isTokenFull():
@@ -45,6 +50,8 @@ class SmartPlayer(HanabiPlayerInterface) :
 
 	def getPlayHint(self):
 		hand = self._getOthersHand()
+		if len(hand) < NUM_CARDS_IN_HAND:
+			return None
 		bestAction = None
 		bestScore = 0
 		for card in hand:
@@ -53,7 +60,9 @@ class SmartPlayer(HanabiPlayerInterface) :
 			action.act = ACTION_HINT
 			self._judge.populateLocs(action, self)
 			toPlay, certainPlays = self._otherState.getPlayResultFromHint(action)
-			if toPlay == None or not (hand[toPlay] in self.getCanPlaySet()):
+			if str(hand[4]) == "1Y":
+				print action, toPlay
+			if toPlay == None or not (str(hand[toPlay]) in self.getCanPlaySet()):
 				continue
 			plays = set(certainPlays)
 			plays.add(toPlay)
@@ -65,8 +74,13 @@ class SmartPlayer(HanabiPlayerInterface) :
 
 	def getDiscardHint(self):
 		hand = self._getOthersHand()
+		if len(hand) < NUM_CARDS_IN_HAND:
+			action = Action()
+			action.act = ACTION_HINT
+			action.color = hand[0].color
+			return action
 		bestAction = None
-		bestScore = 0
+		bestScore = -1
 		for card in hand:
 			action = Action()
 			action.color = card.color
@@ -76,7 +90,7 @@ class SmartPlayer(HanabiPlayerInterface) :
 				self._otherState.getDiscardResultFromHint(action)
 			score = len(set(certainPlays)) * 5 + len(set(certainDiscards))
 			if len(set(certainPlays)) == 0 and len(set(certainDiscards)) == 0:
-				if hand[newDiscardLoc] in self.getDangerousSet():
+				if str(hand[newDiscardLoc]) in self.getDangerousSet():
 					continue
 			if score > bestScore:
 				bestScore = score
@@ -108,7 +122,7 @@ class SmartPlayer(HanabiPlayerInterface) :
 		desk = []
 		for c, number in self._judge.desk.iteritems():
 			for n in xrange(1, number + 1):
-				desk.append(Card(n, c))
+				desk.append(str(Card(n, c)))
 		return desk
 
 	def getDangerousSet(self):

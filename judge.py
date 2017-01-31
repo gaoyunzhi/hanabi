@@ -36,7 +36,7 @@ class Judge(object):
             for player in self._players:
                 self._sendCard(player)
         while not self._isGameEnds():
-            for player in self._players:
+            for player_index, player in enumerate(self._players):
                 self._printGameStatus()
                 if self.byStep: 
                     c = self._getch()
@@ -45,23 +45,25 @@ class Judge(object):
                 if not self._deck:     
                     self.actsAfterEmpty += 1        
                 action = player.act()  
+                if not self.mute:
+                    print player.label, action
+                card = None
                 if action.act in [ACTION_PLAY, ACTION_DISCARD]:
-                    self._actRelatedToCard(player, action.act, action.loc)
+                    card = self._actRelatedToCard(player, action.act, action.loc)
                 elif action.act == ACTION_HINT:
                     self.populateLocs(action, player)
                     self.token -= 1
                 else:
-                    raise Error("act not valid")
+                    raise Exception("act not valid")
+                for other_player_index, other_player in enumerate(self._players):
+                    other_player.postAct(action, card, 
+                        (other_player_index - player_index + len(self._players)) % len(self._players))
                 self.lastAct = action
-                if not self.mute:
-                    print player.label, action
                 if self._isGameEnds():
                     break
         self._gameEnds()
     
     def populateLocs(self, action, player):
-        if action.act != ACTION_HINT:
-            raise Error("action must be hint to populate locs")
         for other_player in self._players:
             if other_player != player:
                 break
@@ -85,8 +87,8 @@ class Judge(object):
         elif act == ACTION_DISCARD:
             self._discard(card)
         else:
-            raise Error("act not valid")
-        player.postAct(card)
+            raise Exception("act not valid")
+        return card
 
     def _play(self, card):
         if self.desk[card.color] + 1 == card.number:
