@@ -6,6 +6,7 @@ from const import ACTION_HINT
 from const import COLOR
 from const import BOOM_LIMIT
 from const import ROUND_AFTER_DECK_EMPTY
+from const import DECK_DISTRIBUTION
 import sys, tty, termios, os
 
 class Judge(object):
@@ -85,10 +86,13 @@ class Judge(object):
             self._discard(card)
         else:
             raise Error("act not valid")
+        player.postAct(card)
 
     def _play(self, card):
         if self.desk[card.color] + 1 == card.number:
             self.desk[card.color] += 1
+            if card.number + 1 == len(DECK_DISTRIBUTION[card.color]) and self.token < TOKEN_INIT:
+                self.token += 1
             return
         self.boom += 1
         self._discard(card)
@@ -164,4 +168,3 @@ class Judge(object):
     def setMute(self):
         self.mute = True
         self.byStep = False # no point of mute and by step
-

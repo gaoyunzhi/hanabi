@@ -27,8 +27,8 @@ all_filenames = [(d, f) for (d, f) in all_filenames if f.endswith('.txt')]
 scores = []
 for file in all_filenames:
 	example_file = file[0] + file[1]
-	if file[1][:3] != "665":
-		continue
+	# if file[1][:3] != "665":
+	# 	continue
 	judge = Judge()
 	judge.takeDeck(getDeck(example_file))
 	# judge.takePlayer([Player(judge, "小娘炮"), Player(judge, "云云哥哥")])
@@ -38,7 +38,7 @@ for file in all_filenames:
 	player2.setOther(player1)
 	judge.takePlayer([player1, player2])
 	judge.byStep = True
-	# judge.setMute()
+	judge.setMute()
 	judge.start()
 	if judge.getScore() != 25:
 		print file[1], judge.getScore()
