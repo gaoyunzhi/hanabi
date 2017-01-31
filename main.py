@@ -24,9 +24,10 @@ for (dirpath, dirnames, filenames) in walk(TEST_DIRECTORY):
 
 all_filenames = [(d, f) for (d, f) in all_filenames if f.endswith('.txt')]
 
+scores = []
 for file in all_filenames:
-	if file[1][:2] != "30":
-		continue
+	# if file[1][:2] != "73":
+	# 	continue
 	example_file = file[0] + file[1]
 	judge = Judge()
 	judge.takeDeck(getDeck(example_file))
@@ -37,10 +38,13 @@ for file in all_filenames:
 	player2.setOther(player1)
 	judge.takePlayer([player1, player2])
 	judge.byStep = True
-	# judge.setMute()
-	# print file[1]
+	judge.setMute()
 	judge.start()
-	print file[1], judge.getScore()
+	if judge.getScore() != 25:
+		print file[1], judge.getScore()
+	scores.append(judge.getScore())
+print sum(scores) * 1.0 / len(scores)
+print sum([s == 25 for s in scores])
 
 # to_print = {}
 # for param in xrange(0, 30):

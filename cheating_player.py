@@ -102,15 +102,16 @@ class CheatingPlayer(HanabiPlayerInterface):
 			DECK_DISTRIBUTION[card.color][card.number]:
 			# last card
 			return 0.2
-		allCards = self._getAllCards()
-		number = self._judge.desk[card.color] + 1
-		score = 0.3
-		while number < card.number:
-			waiting_card = Card(number, card.color)
-			if not str(waiting_card) in allCards:
-				score += 0.1
-			number += 1
-		return score
+		# allCards = self._getAllCards()
+		# number = self._judge.desk[card.color] + 1
+		# score = 0.3
+		# while number < card.number:
+		# 	waiting_card = Card(number, card.color)
+		# 	if not str(waiting_card) in allCards:
+		# 		score += 0.1
+		# 	number += 1
+		# return score
+		return [0.3, 0.4, 0.5, 0.6, 0.7][card.number]
 
 	def _getAllCards(self):
 		result = set()
