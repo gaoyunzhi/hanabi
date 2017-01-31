@@ -26,8 +26,6 @@ all_filenames = [(d, f) for (d, f) in all_filenames if f.endswith('.txt')]
 
 scores = []
 for file in all_filenames:
-	# if file[1][:2] != "73":
-	# 	continue
 	example_file = file[0] + file[1]
 	judge = Judge()
 	judge.takeDeck(getDeck(example_file))

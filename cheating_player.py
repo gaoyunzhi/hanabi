@@ -20,56 +20,71 @@ class CheatingPlayer(HanabiPlayerInterface):
 		self._otherHand = self._judge.getHands(self).values()[0]
 		self._myHand = self._judge.getHands(self._other).values()[0]
 	
-		if self._getPotentialPlayAction():
-			return self._getPotentialPlayAction()
+		if self._getPotentialPlayAction(self._myHand, self._otherHand):
+			return self._getPotentialPlayAction(self._myHand, self._otherHand)
 		if self._judge.isTokenFull():
 			return self._getHintAction()
 
-		if self._judge.getScore() < 17 and self._getPotentialDiscardAction():
-			return self._getPotentialDiscardAction()		
+		if self._judge.getScore() < 17 and self._getPotentialDiscardAction(self._myHand, self._otherHand):
+			return self._getPotentialDiscardAction(self._myHand, self._otherHand)	
 
 		if self._judge.token > 0 and self._judge.lastAct.act != ACTION_HINT:
 			return self._getHintAction()
-		if self._judge.token == 0 and self._getPotentialDiscardAction():
-			return self._getPotentialDiscardAction()
+		if self._getPotentialDiscardAction(self._myHand, self._otherHand):
+			return self._getPotentialDiscardAction(self._myHand, self._otherHand)
 
-		return self._getBestDiscardAction()
+		if self._judge.token == 0:
+			return self._getBestDiscardAction(self._myHand)
 
-	def _getBestDiscardAction(self):
-		maxScroe = max([self._discardScore(c) for c in self._myHand])
-		for index, card in enumerate(self._myHand):
-			if self._discardScore(card) > maxScroe - 0.00001:
+		if self._hasValidThingTodo(self._otherHand, self._myHand):
+			return self._getHintAction()
+		if max([self._discardScore(c) for c in self._myHand]) < \
+			min(0.3, max([self._discardScore(c) for c in self._otherHand]) - 0.000001):
+			return self._getHintAction()
+		return self._getBestDiscardAction(self._myHand)
+
+	def _hasValidThingTodo(self, hand, otherHand):
+		if self._getPotentialPlayAction(hand, otherHand):
+			return True
+		if self._getPotentialDiscardAction(hand, otherHand):
+			return True
+		return False
+
+	def _getBestDiscardAction(self, hand):
+		max_score = max([self._discardScore(c) for c in hand])
+		for index, card in enumerate(hand):
+			if self._discardScore(card) > max_score - 0.00001:
 				action = Action()
 				action.act = ACTION_DISCARD
 				action.loc = index
 				return action
 
-	def _getPotentialPlayAction(self):
-		for index, card in enumerate(self._myHand):
+	def _getPotentialPlayAction(self, hand, otherHand):
+		for index, card in enumerate(hand):
 			if not self._canPlay(card):
 				continue
-			if self._blockOther(card):
+			if self._blockOther(card, otherHand):
 				action = Action()
 				action.act = ACTION_PLAY
 				action.loc = index
 				return action
-		for index, card in enumerate(self._myHand):
+		for index, card in enumerate(hand):
 			if self._canPlay(card):
 				action = Action()
 				action.act = ACTION_PLAY
 				action.loc = index
 				return action
 
-	def _blockOther(self, card):
-		if str(card) in [str(c) for c in self._otherHand]:
+	def _blockOther(self, card, otherHand):
+		if str(card) in [str(c) for c in otherHand]:
 			return True
 		cardNext = Card(card.number + 1, card.color)
-		if str(card) in [str(c) for c in self._otherHand]:
+		if str(card) in [str(c) for c in otherHand]:
 			return True
 
-	def _getPotentialDiscardAction(self):
-		for index, card in enumerate(self._myHand):
-			if self._canDiscard(card):
+	def _getPotentialDiscardAction(self, hand, otherHand):
+		for index, card in enumerate(hand):
+			if self._canDiscard(card, hand, otherHand):
 				action = Action()
 				action.act = ACTION_DISCARD
 				action.loc = index
@@ -81,11 +96,11 @@ class CheatingPlayer(HanabiPlayerInterface):
 		action.number = self._otherHand[0].number
 		return action
 
-	def _canDiscard(self, card):
+	def _canDiscard(self, card, hand, otherHand):
 		for c, number in self._judge.desk.iteritems():
 			if card.color == c and card.number <= number:	
 				return True	
-		if sum([str(c) == str(card) for c in self._myHand]) > 1:
+		if sum([str(c) == str(card) for c in hand]) > 1:
 			return True
 		return False
 
@@ -101,7 +116,7 @@ class CheatingPlayer(HanabiPlayerInterface):
 		if self._judge.discardedDeck.get(str(card), 0) + 1 == \
 			DECK_DISTRIBUTION[card.color][card.number]:
 			# last card
-			return 0.2
+			return 0.2 + [1, 2, 3, 4, 5, 6][card.number] * 0.045
 		# allCards = self._getAllCards()
 		# number = self._judge.desk[card.color] + 1
 		# score = 0.3
