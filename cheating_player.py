@@ -103,12 +103,25 @@ class CheatingPlayer(HanabiPlayerInterface):
 				return True	
 		if sum([str(c) == str(card) for c in hand]) > 1:
 			return True
+		if self._isNoHope(card):
+			return True
+		return False
+
+	def _isNoHope(self, card):
+		# number = card.number - 1
+		# while number > 0:
+		# 	if self._judge.discardedDeck.get(str(number) + card.color, 0) == \
+		# 		DECK_DISTRIBUTION[card.color][number]:
+		# 		return True
+		# 	number -= 1
 		return False
 
 	def _discardScore(self, card):
 		for c, number in self._judge.desk.iteritems():
 			if card.color == c and card.number <= number:	
 				return 1.0
+		if self._isNoHope(card):
+			return 1.0
 		for c, number in self._judge.desk.iteritems():
 			if card.color == c and card.number == number + 1:	
 				return 0.0
