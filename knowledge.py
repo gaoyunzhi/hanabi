@@ -3,8 +3,8 @@ class Knowledge(object):
 		if player:
 			self.possibleCard = player.getInitPossibleCards()
 
-	def containedIn(self, set):
-		return len(self.possibleCard.keys() - set(set)) == 0
+	def containedIn(self, aSet):
+		return len(set(self.possibleCard.keys()) - set(aSet)) == 0
 
 	def updateFromHint(self, hint):
 		keysToDelete = set()
@@ -20,10 +20,10 @@ class Knowledge(object):
 		if not card in self.possibleCard:
 			return
 		self.possibleCard[card] -= 1
-		if self.possibleCard[card] == 0：
+		if self.possibleCard[card] == 0:
 			del self.possibleCard[card]
 
-	def __copy__(self):
+	def copy(self):
 		k = Knowledge(None)
 		k.possibleCard = self.possibleCard.copy()
 		return k

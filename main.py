@@ -4,6 +4,7 @@
 from judge import Judge
 from player import Player
 from cheating_player import CheatingPlayer
+from smart_player import SmartPlayer
 from const import TEST_DIRECTORY
 from os import walk
 from card import Card
@@ -32,10 +33,8 @@ for file in all_filenames:
 	judge = Judge()
 	judge.takeDeck(getDeck(example_file))
 	# judge.takePlayer([Player(judge, "小娘炮"), Player(judge, "云云哥哥")])
-	player1 = CheatingPlayer(judge, "小娘炮")
-	player2 = CheatingPlayer(judge, "云云哥哥")
-	player1.setOther(player2)
-	player2.setOther(player1)
+	player1 = SmartPlayer(judge, "小娘炮")
+	player2 = SmartPlayer(judge, "云云哥哥")
 	judge.takePlayer([player1, player2])
 	judge.byStep = True
 	judge.setMute()
