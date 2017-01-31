@@ -44,8 +44,11 @@ class SmartPlayer(HanabiPlayerInterface) :
 		if self._judge.token > 0 and (not self._otherState.getPlayAction()) and \
 			self.getPlayHint():
 			return self.getPlayHint()
-		if (self._otherState.isPotentiallyDangerous(self._getOthersHand()) and self._judge.token > 0) or self._judge.isTokenFull():
+		if (self._otherState.isPotentiallyDangerous(self._getOthersHand()) and self._judge.token > 0) and self.getDiscardHint():
 			return self.getDiscardHint()
+		if self._judge.isTokenFull():
+			return self.getDiscardHint() or self.defaultHint()
+		
 		return self._myState.getDiscardAction()
 
 	def getPlayHint(self):
@@ -60,8 +63,6 @@ class SmartPlayer(HanabiPlayerInterface) :
 			action.act = ACTION_HINT
 			self._judge.populateLocs(action, self)
 			toPlay, certainPlays = self._otherState.getPlayResultFromHint(action)
-			if str(hand[4]) == "1Y":
-				print action, toPlay
 			if toPlay == None or not (str(hand[toPlay]) in self.getCanPlaySet()):
 				continue
 			plays = set(certainPlays)
@@ -72,13 +73,14 @@ class SmartPlayer(HanabiPlayerInterface) :
 				bestAction = action
 		return bestAction
 
+	def defaultHint(self):
+		action = Action()
+		action.act = ACTION_HINT
+		action.color = self._getOthersHand()[0].color
+		return action	
+
 	def getDiscardHint(self):
 		hand = self._getOthersHand()
-		if len(hand) < NUM_CARDS_IN_HAND:
-			action = Action()
-			action.act = ACTION_HINT
-			action.color = hand[0].color
-			return action
 		bestAction = None
 		bestScore = -1
 		for card in hand:

@@ -15,7 +15,6 @@ class SmartState(object):
 	def getPlayPotentials(self):
 		potentials = set(self._getCertainPlayLocs(self.knowledges))
 		if self.toPlay:
-			print self._player.label, "toPlay", self.toPlay
 			potentials.add(self.toPlay)
 		potentials = list(potentials)
 		potentials.sort()
@@ -72,8 +71,6 @@ class SmartState(object):
 			self.knowledges[loc].updateFromHint(action)
 		if action.number != None:
 			self.toPlay, _ = self.getPlayResultFromHint(action)
-			if action.number == 2 and action.locs[0] == 4:
-				print "~~~~", self.getPlayResultFromHint(action)
 		if action.color != None:
 			self.discardLoc, _, _ = self.getDiscardResultFromHint(action)
 
