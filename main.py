@@ -42,7 +42,7 @@ for file in all_filenames:
 		print file[1], judge.getScore()
 	scores.append(judge.getScore())
 print sum(scores) * 1.0 / len(scores)
-print sum([s == 25 for s in scores])
+print sum([s == 30 for s in scores])
 
 # to_print = {}
 # for param in xrange(0, 30):

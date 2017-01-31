@@ -7,6 +7,7 @@ from action import Action
 from const import DECK_DISTRIBUTION
 from const import NUM_CARDS_IN_HAND
 from card import Card
+from const import MULTI_COLOR
 
 class CheatingPlayer(HanabiPlayerInterface):
 	def __init__(self, judge, label):
