@@ -141,5 +141,8 @@ class SmartPlayer(HanabiPlayerInterface) :
 	def _getOthersHand(self):
 		return self._judge.getHands(self).values()[0]
 
+	def hasMoreCardsInDeck(self):
+		return self._judge.isPlayerHandsFull()
+
 
 		

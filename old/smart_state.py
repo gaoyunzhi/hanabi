@@ -43,10 +43,11 @@ class SmartState(object):
 
 	def _getNewDiscardLoc(self, loc, knowledges):
 		for i in xrange(NUM_CARDS_IN_HAND):
-			newLoc = (loc + i) % NUM_CARDS_IN_HAND
+			newLoc = (loc + i) % len(knowledges)
 			if knowledges[newLoc].containedIn(self._player.getDangerousSet()):
 				continue
 			return newLoc
+		return 0
 
 	def isDangerous(self, hand):
 		if self._getCertainDiscardLocs(self.knowledges):
@@ -76,8 +77,8 @@ class SmartState(object):
 
 	def _getDiscardLocFromHint(self, locs, knowledges):
 		for shift in xrange(NUM_CARDS_IN_HAND):
-			if (self.discardLoc + shift) % NUM_CARDS_IN_HAND in locs:
-				newLoc = (self.discardLoc + shift + 1) % NUM_CARDS_IN_HAND
+			if (self.discardLoc + shift) % len(knowledges) in locs:
+				newLoc = (self.discardLoc + shift + 1) % len(knowledges)
 				break
 		return self._getNewDiscardLoc(newLoc, knowledges)
 
@@ -109,7 +110,7 @@ class SmartState(object):
 				self.toPlay = None
 			if self.toPlay > action.loc:
 				self.toPlay -= 1
-		if len(self.knowledges) < NUM_CARDS_IN_HAND:
+		if len(self.knowledges) < NUM_CARDS_IN_HAND and self._player.hasMoreCardsInDeck():
 			new_k = Knowledge(self._player)
 			for card in self._player.getSeenCards():
 				new_k.removePossibility(str(card))
@@ -132,6 +133,6 @@ class SmartState(object):
 		markedLocs = set([self._getCertainDiscardLocs(knowledges)] + [self._getCertainPlayLocs(knowledges)])
 		for number in xrange(1, NUM_CARDS_IN_HAND):
 			for loc in locs:
-				potentialLoc = (loc + number) % NUM_CARDS_IN_HAND
+				potentialLoc = (loc + number) % len(knowledges)
 				if not potentialLoc in markedLocs:
 					return potentialLoc

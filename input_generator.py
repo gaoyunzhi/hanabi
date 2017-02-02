@@ -5,8 +5,8 @@ from random import shuffle
 import os
 
 SHUFFLE_TIMES = 100
-TEST_FILE_NUM = 1000
-FILE_NAME_LENGH = 3
+TEST_FILE_NUM = 10000
+FILE_NAME_LENGH = 4
 
 def genDeck():
 	deck = []
