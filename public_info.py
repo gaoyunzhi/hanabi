@@ -121,7 +121,7 @@ def getDiscardableCards(public_info):
 def getUndiscardbleCards(public_info):
 	cards = set()
 	for c in public_info[DESK]:
-		for num in xrange(public_info[DESK][c] + 2, len(DECK_DISTRIBUTION[c])):
+		for num in xrange(public_info[DESK][c] + 1, len(DECK_DISTRIBUTION[c])):
 			card = str(num) + c
 			if public_info[DISCARD_DECK].get(card, 0) + 1 == DECK_DISTRIBUTION[c][num]:
 				cards.add(card)

@@ -5,7 +5,6 @@ from judge import Judge
 from player import Player
 from const import TEST_DIRECTORY
 from os import walk
-from card import Card
 
 def getDeck(example_file):
 	f = open(example_file)
@@ -31,7 +30,6 @@ for file in all_filenames:
 	# if file[1][:3] != "515":
 	# 	continue
 	judge = Judge(getDeck(example_file))
-	judge.takeDeck(getDeck(example_file))
 	player1 = Player(judge, "player1")
 	player2 = Player(judge, "player2")
 	judge.takePlayer([player1, player2])

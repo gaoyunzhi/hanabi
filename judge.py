@@ -1,8 +1,5 @@
 from const import NUM_CARDS_IN_HAND
 from const import TOKEN_INIT
-from const import ACTION_PLAY
-from const import ACTION_DISCARD
-from const import ACTION_HINT
 from const import COLOR
 from const import BOOM_LIMIT
 from const import ROUND_AFTER_DECK_EMPTY
@@ -16,10 +13,10 @@ class Judge(object):
         self.byStep = False
         self.mute = False
         self._deck = deck
-        self.publicInfo = getInitialPublicInfo()
         self._hands = {}
 
     def takePlayer(self, players):
+        self.publicInfo = getInitialPublicInfo(len(players))
         self._players = players
         for player in self._players:
             self._hands[player] = []
@@ -40,6 +37,10 @@ class Judge(object):
                 action = populateLocs(player.act(), self._hands[self._getOther(player)])
                 if not self.mute:
                     print player.label, action
+                for other_player_index, other_player in enumerate(self._players):
+                    other_player.postAct(action, 
+                        (other_player_index - player_index + len(self._players)) % len(self._players))
+                    print other_player.label, _getOther(other_player).getOthersHand()
                 updatePublicInfo(self.publicInfo, action, self._hands[player])
                 self._sendCard(player)
                 if self._isGameEnds(action):
@@ -67,7 +68,7 @@ class Judge(object):
 
     def _isGameEnds(self, action):
         return (action and not isActionValid(action)) or \
-            isGameEnds(self.publicInfo):
+            isGameEnds(self.publicInfo)
 
     def _gameEnds(self):
         self._printGameStatus()
