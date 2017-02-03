@@ -18,7 +18,7 @@ from action import isDiscard, getAllHints, isHint
 # ACTION_SCORE = [0, 0, 60, 100, 135, 168]
 MAX = 100000
 
-class JanPlayer(HanabiPlayerInterface) :
+class Player(HanabiPlayerInterface) :
 	def __init__(self, judge, label):
 		self._judge = judge
 		self.label = label
@@ -58,4 +58,3 @@ class JanPlayer(HanabiPlayerInterface) :
 		if not actions:
 			actions.append(getDiscardAction(self._myState))
 		return actions
-		

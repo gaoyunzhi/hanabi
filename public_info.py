@@ -113,3 +113,38 @@ def getPlayableCards(public_info):
 
 def getDiscardableCards(public_info):
 	cards = set()
+	for c in public_info[DESK]:
+		for num in xrange(1, public_info[DESK][c] + 1):
+			cards.add(str(num) + c)
+	return cards
+
+def getUndiscardbleCards(public_info):
+	cards = set()
+	for c in public_info[DESK]:
+		for num in xrange(public_info[DESK][c] + 2, len(DECK_DISTRIBUTION[c])):
+			card = str(num) + c
+			if public_info[DISCARD_DECK].get(card, 0) + 1 == DECK_DISTRIBUTION[c][num]:
+				cards.add(card)
+	return cards
+
+def getSuggestDiscardCards(public_info):
+	cards = set()
+	for c in public_info[DESK]:
+		for num in xrange(public_info[DESK][c] + 3, len(DECK_DISTRIBUTION[c])):
+			card = str(num) + c
+			if public_info[DISCARD_DECK][card] + 1 != DECK_DISTRIBUTION[c][num]:
+				cards.add(card)
+	return cards
+
+def getPossibleHandCards(public_info):
+	cards = set()
+	for c in public_info[DESK]:
+		for num in xrange(1, len(DECK_DISTRIBUTION[c])):
+			card = str(num) + c
+			current_number = public_info[DISCARD_DECK].get(card, 0)
+			if num <=  public_info[DESK][c]:
+				current_number += 1
+			if current_number < DECK_DISTRIBUTION[c][num]:
+				cards.add(card)
+	return cards
+
