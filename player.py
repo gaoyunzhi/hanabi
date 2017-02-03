@@ -8,46 +8,54 @@ from const import DECK_DISTRIBUTION
 from const import NUM_CARDS_IN_HAND
 from const import COLOR
 from card import Card
-from smart_state import SmartState
+from state import getInitState, updateFromHint
+from public_info import noToken, tokenFull
+from state import getPossibleActionFromState
+from action import isDiscard, getAllHints
+
+# one bit of information is count as 60
+# ACTION_SCORE = [0, 0, 60, 100, 135, 168]
 
 class JanPlayer(HanabiPlayerInterface) :
 	def __init__(self, judge, label):
 		self._judge = judge
 		self.label = label
+		self._myState = getInitState()
+		self._otherState = getInitState()
 
-	def postAct(self, action, actionResult, player_index):
-		if action.act in [ACTION_PLAY, ACTION_DISCARD]:
-			self._myState.updateFromPostActionWithCard(action, actionResult)
-			self._otherState.updateFromPostActionWithCard(action, actionResult)
-			if player_index == 1:
-				self._otherState.updateOwnAction(action, actionResult)
-			else:
-				self._myState.updateOwnAction(action, actionResult)
-			# deal with boom?
-		if action.act == ACTION_HINT:
-			if player_index == 1:
-				self._myState.updateFromHint(action)
-			else:
-				if player_index != 0:
-					raise Exception("only support two players")
-				self._otherState.updateFromHint(action)
-
-	def populateLocs(self, action):
-		self._judge.populateLocs(action, self)
+	def postAct(self, action, _, player_index):
+		if action.act != ACTION_HINT:
+			return
+		if player_index == 1:
+			updateFromHint(self._myState, action)
+		else:
+			updateFromHint(self._otherState, action)
 
 	def act(self):
-		if (not (self._otherState.isDangerous(self._getOthersHand()) and self._judge.token > 0)) and \
-			self._myState.getPlayAction():
-			return self._myState.getPlayAction()
-		if self._judge.token > 0 and (not self._otherState.getPlayAction()) and \
-			self.getPlayHint():
-			return self.getPlayHint()
-		if (self._otherState.isPotentiallyDangerous(self._getOthersHand()) and self._judge.token > 0) and self.getDiscardHint():
-			return self.getDiscardHint()
-		if self._judge.isTokenFull():
-			return self.getDiscardHint() or self.defaultHint()
-		
-		return self._myState.getDiscardAction()
+		self._otherState = updateWithPublicInfo(self._otherState, self._judge.publicInfo)
+		self._myState = updateWithPublicInfo(self._myState, self._judge.publicInfo)
+		# TODO: integrate private info
+		possibilities = set(self.getPossibleAction())
+		if not noToken(self._judge.publicInfo):
+			possibilities.addAll(getAllHints())
+		for possibility in possibilities:
+			
+
+
+
+
+	def getPossibleAction(self):
+		actions = getCertainActionFromState(self, self._myState)
+		if tokenFull(self._judge.publicInfo):
+			actions = [action in actions if not isDiscard(action)]
+		if actions:
+			return pickAction(actions, self._myState, self._otherState)
+		return getDiscardAction(self._myState)
+
+
+
+
+
 
 	def getPlayHint(self):
 		hand = self._getOthersHand()
