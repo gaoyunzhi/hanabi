@@ -5,7 +5,7 @@ from const import BOOM_LIMIT
 from const import ROUND_AFTER_DECK_EMPTY
 from const import DECK_DISTRIBUTION
 import sys, tty, termios, os
-from public_info import getInitialPublicInfo, isGameEnds, getScore
+from public_info import getInitialPublicInfo, isGameEnds, getScore, updatePublicInfo
 from action import populateLocs, isActionValid
 
 class Judge(object):
@@ -40,7 +40,7 @@ class Judge(object):
                 for other_player_index, other_player in enumerate(self._players):
                     other_player.postAct(action, 
                         (other_player_index - player_index + len(self._players)) % len(self._players))
-                    print other_player.label, _getOther(other_player).getOthersHand()
+                    print other_player.label, self._getOther(other_player).getOthersHand()
                 updatePublicInfo(self.publicInfo, action, self._hands[player])
                 self._sendCard(player)
                 if self._isGameEnds(action):

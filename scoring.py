@@ -1,5 +1,6 @@
-from const import BOOM_LIMIT, TOKEN_INIT, NUM_CARDS_IN_HAND
+from const import BOOM_LIMIT, TOKEN_INIT, NUM_CARDS_IN_HAND, MARK, POS, NEG, P, K, D
 from public_info import BOOM, TOKEN, DESK
+
 LAST_TOKEN = 300.0
 BOOM_PENALTY = 1000
 
@@ -23,14 +24,14 @@ def keepScore(card, public_info, state, k, s):
  		return tokenAdd(public_info) 
  	if card in s:
  		return 0
- 	if int(card[1]) == public_info[DESK] + 1:
+ 	if int(card[0]) == public_info[DESK][card[1]] + 1:
  		return tokenAdd(public_info) * 0.8
- 	if int(card[1]) == public_info[DESK] + 2:
+ 	if int(card[0]) == public_info[DESK][card[1]] + 2:
  		return tokenAdd(public_info) / 2
 
-def knowledgeScore(state, atom):
+def knowledgeScore(atom, public_info):
 	score = 0.0
-	if atom[MARK] == set(D, K) or atom[MARK] == set(D, P):
+	if atom[MARK] == set([D, K]) or atom[MARK] == set([D, P]):
 		score += tokenAdd(public_info) / 5
 	score += len(atom[POS]) * tokenAdd(public_info) / 3
 	score += len(atom[NEG]) * tokenAdd(public_info) / 3 / 4
@@ -39,7 +40,7 @@ def knowledgeScore(state, atom):
 def numActionScore(num, public_info):
 	return tokenAdd(public_info) * [0, 0, 1.0, 5.0/3, 9.0/4, 14.0/5][num]
 
-def blockedSpaceScore(space):
+def blockedSpaceScore(space, public_info):
 	return tokenAdd(public_info) / (NUM_CARDS_IN_HAND - space + 1)
 
 def discardScore(atom, card, public_info, k, s, d):
@@ -47,9 +48,10 @@ def discardScore(atom, card, public_info, k, s, d):
 		return failureScore()
 	if card in s:
 		return 0
-	if int(card[1]) == public_info[DESK] + 1:
+	if int(card[0]) == public_info[DESK][card[1]] + 1:
  		return - tokenAdd(public_info) 
- 	if int(card[1]) == public_info[DESK] + 1:
+ 	if int(card[0]) == public_info[DESK][card[1]] + 2:
  		return - tokenAdd(public_info) * 0.3
  	if card in d:
  		return tokenAdd(public_info) * 0.5
+

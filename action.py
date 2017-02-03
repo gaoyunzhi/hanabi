@@ -54,6 +54,6 @@ def isActionValid(action):
 	return len(action[LOCS]) > 0
 
 def getAllHints():
-	return set([hint(x) for x in xrange(1, len(DECK_DISTRIBUTION[COLOR[0]]))] + \
-		[hint(x) for x in COLOR])
+	return [hint(x) for x in xrange(1, len(DECK_DISTRIBUTION[COLOR[0]]))] + \
+		[hint(x) for x in COLOR]
 

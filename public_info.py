@@ -13,6 +13,7 @@ TOKEN = "token"
 BOOM = "boom"
 ACT_AFTER_EMPTY = "act_after_empty"
 NUM_PLAYER = "num_player"
+NUM_CARDS_IN_DECK = "num_cards_in_deck"
 
 def copyPublicInfo(public_info):
 	return {
@@ -132,7 +133,7 @@ def getSuggestDiscardCards(public_info):
 	for c in public_info[DESK]:
 		for num in xrange(public_info[DESK][c] + 3, len(DECK_DISTRIBUTION[c])):
 			card = str(num) + c
-			if public_info[DISCARD_DECK][card] + 1 != DECK_DISTRIBUTION[c][num]:
+			if public_info[DISCARD_DECK].get(card, 0) + 1 != DECK_DISTRIBUTION[c][num]:
 				cards.add(card)
 	return cards
 

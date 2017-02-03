@@ -5,8 +5,8 @@ from const import COLOR
 from public_info import noToken, tokenFull
 from state import getInitState, copyState, \
 	updateFromOwnAction, updateFromOtherAction, updateFromPublicInfo, \
-	getCertainActionFromState, getDiscardAction, getAtomString
-from action import isDiscard, getAllHints, isHint
+	getCertainActionFromState, getDiscardAction, getAtomString, scoreState, STATE
+from action import isDiscard, getAllHints, isHint, populateLocs, LOCS
 
 MAX = 10000000
 
@@ -25,23 +25,26 @@ class Player(HanabiPlayerInterface) :
 			updateFromOtherAction(self._otherState, self._myState, action, self._judge.publicInfo)
 			updateFromOwnAction(self._myState, action)
 
-	def getOthersHand():
+	def getOthersHand(self):
 		result = []
-		for index, card in enumerate(self._judge.getOthersHand()):
+		for index, card in enumerate(self._judge.getOthersHand(self)):
 			result.append(getAtomString(
 				index, self._otherState[STATE][index], self._otherState, card))
-		print result
-
+		return result
 
 	def act(self):
-		self._otherState = updateFromPublicInfo(self._otherState, self._judge.publicInfo)
-		self._myState = updateFromPublicInfo(self._myState, self._judge.publicInfo)
+		updateFromPublicInfo(self._otherState, self._judge.publicInfo)
+		updateFromPublicInfo(self._myState, self._judge.publicInfo)
 		# TODO: integrate private info
-		possibilities = set(self.getPossibleActions())
+		possibilities = self.getPossibleActions()
 		if not noToken(self._judge.publicInfo):
-			possibilities.addAll(getAllHints())
+			possibilities += getAllHints()
 		score = - MAX
+		action = None
 		for possibility in possibilities:
+			possibility = populateLocs(possibility, self._judge.getOthersHand(self))
+			if isHint(possibility) and len(possibility[LOCS]) == 0:
+				continue
 			otherState = copyState(self._otherState)
 			updateFromOtherAction(otherState, self._myState, possibility, self._judge.publicInfo)
 			new_score = scoreState(otherState, self._judge.publicInfo, 
@@ -50,7 +53,7 @@ class Player(HanabiPlayerInterface) :
 		return action
 
 	def getPossibleActions(self):
-		actions = getCertainActionFromState(self, self._myState)
+		actions = getCertainActionFromState(self._myState)
 		if tokenFull(self._judge.publicInfo):
 			actions = [action for action in actions if not isDiscard(action)]
 		if not actions:

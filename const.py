@@ -15,3 +15,17 @@ NUM_CARDS_IN_HAND = 5
 TOKEN_INIT = 8
 BOOM_LIMIT = 2
 ROUND_AFTER_DECK_EMPTY = 1
+
+MARK = "mark"
+POS = "pos_info"
+NEG = "neg_info"
+
+P = "to play"
+K = "to keep"
+D = "to discard"
+
+PKD = {
+	P: "P",
+	K: "K",
+	D: "D",
+}
