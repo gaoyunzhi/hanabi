@@ -101,3 +101,15 @@ def noToken(public_info):
 
 def tokenFull(public_info):
 	return public_info[TOKEN] == TOKEN_INIT
+
+def getPlayableCards(public_info):
+	cards = set()
+	for c in public_info[DESK]:
+		num = public_info[DESK][c] + 1
+		if num == len(DECK_DISTRIBUTION[c]):
+			continue
+		cards.add(str(num) + c)
+	return cards
+
+def getDiscardableCards(public_info):
+	cards = set()
