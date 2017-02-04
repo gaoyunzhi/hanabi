@@ -26,10 +26,14 @@ class Player(HanabiPlayerInterface) :
 			updateFromOwnAction(self._myState, action)
 
 	def getOthersHand(self):
+		return self._getOtherHand(self._otherState)
+
+	def _getOtherHand(self, original_state):
 		result = []
+		state = copyState(original_state)
+		updateFromPublicInfo(state, self._judge.publicInfo)
 		for index, card in enumerate(self._judge.getOthersHand(self)):
-			result.append(getAtomString(
-				index, self._otherState[STATE][index], self._otherState, card))
+			result.append(getAtomString(index, state[STATE][index], state, card))
 		return result
 
 	def act(self):
@@ -47,8 +51,9 @@ class Player(HanabiPlayerInterface) :
 				continue
 			otherState = copyState(self._otherState)
 			updateFromOtherAction(otherState, self._myState, possibility, self._judge.publicInfo)
-			new_score = scoreState(otherState, self._judge.publicInfo, 
+			new_score = scoreState(otherState, self._myState, self._judge.publicInfo, 
 				possibility, self._judge.getOthersHand(self))
+			# print new_score, possibility, self._getOtherHand(otherState)
 			(score, action) = max((score, action), (new_score, possibility))
 		return action
 
@@ -56,6 +61,6 @@ class Player(HanabiPlayerInterface) :
 		actions = getCertainActionFromState(self._myState)
 		if tokenFull(self._judge.publicInfo):
 			actions = [action for action in actions if not isDiscard(action)]
-		if not actions:
+		elif not actions:
 			actions.append(getDiscardAction(self._myState))
 		return actions

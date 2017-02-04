@@ -50,7 +50,6 @@ def isDiscard(action):
 def isActionValid(action):
 	if not isHint(action):
 		return True
-	action = populateLocs(action)
 	return len(action[LOCS]) > 0
 
 def getAllHints():

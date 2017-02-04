@@ -15,6 +15,24 @@ ACT_AFTER_EMPTY = "act_after_empty"
 NUM_PLAYER = "num_player"
 NUM_CARDS_IN_DECK = "num_cards_in_deck"
 
+def getStringPublicInfo(public_info):
+	result = "#" + str(public_info[ROUND]) + " DESK: "
+	for c in public_info[DESK]:
+		result += c + str(public_info[DESK][c]) + " "
+	result += "DISCARD:"
+	discard = {}
+	for c in DECK_DISTRIBUTION:
+		discard[c] = []
+	for card in public_info[DISCARD_DECK]:
+		discard[card[1]] += [str(card[0])] * public_info[DISCARD_DECK][card]
+	for c in DECK_DISTRIBUTION:
+		discard[c].sort()
+		result += c + "".join(discard[c]) + " "
+	result += " TOKEN:" + str(public_info[TOKEN])
+	if public_info[BOOM]:
+		result += " BOOM:" + str(public_info[BOOM])
+	return result
+
 def copyPublicInfo(public_info):
 	return {
 		NUM_PLAYER: public_info[NUM_PLAYER],
@@ -46,9 +64,10 @@ def getInitialPublicInfo(num_player):
 	}
 
 def updatePublicInfo(public_info, action, hand):
-	if isHint(action):
-		return
 	public_info[ROUND] += 1
+	if isHint(action):
+		public_info[TOKEN] -= 1
+		return
 	if public_info[NUM_CARDS_IN_DECK]:
 		public_info[NUM_CARDS_IN_DECK] -= 1
 	else:
@@ -57,7 +76,6 @@ def updatePublicInfo(public_info, action, hand):
 	card = hand[action[LOC]]
 	hand.pop(action[LOC])
 	if isPlay(action):
-		public_info[TOKEN] -= 1
 		public_info = _playCard(public_info, card)
 	else:
 		public_info[TOKEN] += 1
@@ -89,7 +107,7 @@ def _isPublicInfoValid(public_info):
 
 def isGameEnds(public_info):
 	if not _isPublicInfoValid(public_info):
-		return False
+		return True
 	return public_info[ACT_AFTER_EMPTY] == ROUND_AFTER_DECK_EMPTY * public_info[NUM_PLAYER]
 
 def getScore(public_info):
@@ -131,7 +149,7 @@ def getUndiscardbleCards(public_info):
 def getSuggestDiscardCards(public_info):
 	cards = set()
 	for c in public_info[DESK]:
-		for num in xrange(public_info[DESK][c] + 3, len(DECK_DISTRIBUTION[c])):
+		for num in xrange(public_info[DESK][c] + 4, len(DECK_DISTRIBUTION[c])):
 			card = str(num) + c
 			if public_info[DISCARD_DECK].get(card, 0) + 1 != DECK_DISTRIBUTION[c][num]:
 				cards.add(card)
