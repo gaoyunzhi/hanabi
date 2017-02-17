@@ -6,11 +6,19 @@ TOKEN_VALUE = 100.0
 BOOM_PENALTY = 3000
 EPSILON = 0.001
 
+def gameEndBonus(public_info):
+	if _getMaxToDiscardAndToPlay(public_info)[1] == 1:
+		return 3000
+	else:
+		return 0
+
 def discardPenalty(public_info):
-	return - TOKEN_VALUE / (_getMaxToDiscardAndToPlay(public_info)[0] + EPSILON)
+	if _getMaxToDiscardAndToPlay(public_info)[1] == 1 and public_info[TOKEN] > 0:
+		return -3000
+	return - TOKEN_VALUE * 2 / (_getMaxToDiscardAndToPlay(public_info)[0] + EPSILON)
 
 def _getMaxToDiscardAndToPlay(public_info):
-	play_or_discard = public_info[NUM_CARDS_IN_DECK] + public_info[NUM_PLAYER] * ROUND_AFTER_DECK_EMPTY
+	play_or_discard = public_info.num_cards_in_deck + public_info[NUM_PLAYER] * ROUND_AFTER_DECK_EMPTY
 	to_play = 0
 	for c in public_info[DESK]:
 		to_play += len(DECK_DISTRIBUTION[c]) - 1 - public_info[DESK][c]
@@ -36,10 +44,16 @@ def wrongMark(atom, public_info):
 	return tokenMinus(public_info) * (2 - len(atom[POS]))
 
 def tokenAdd(public_info):
-	return TOKEN_VALUE + public_info[TOKEN] * 1.0 / TOKEN_INIT * TOKEN_VALUE
+	additon = 0
+	if public_info[TOKEN] == 0:
+		additon = TOKEN_VALUE * 0.3
+	return TOKEN_VALUE + public_info[TOKEN] * 1.0 / TOKEN_INIT * TOKEN_VALUE + additon
 
 def tokenMinus(public_info):
-	return - (TOKEN_VALUE + (public_info[TOKEN] + 1) * 1.0 / TOKEN_INIT * TOKEN_VALUE)
+	additon = 0
+	if public_info[TOKEN] <= 1:
+		additon = TOKEN_VALUE * 0.3
+	return - (TOKEN_VALUE + (public_info[TOKEN] + 1) * 1.0 / TOKEN_INIT * TOKEN_VALUE) - additon
 
 def keepScore(card, public_info, k, s):
  	if card in k:

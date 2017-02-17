@@ -3,56 +3,51 @@ from const import COLOR, DECK_DISTRIBUTION
 PLAY = "play"
 DISCARD = "discard"
 HINT = "hint"
-ACT = "act"
-LOC = "loc"
-LOCS = "locs"
 
+class Action(object):
+	def __init__(self):
+		self.act = None
+		self.loc = None
 
-def hint(hint):
-	return {
-		ACT: HINT,
-		HINT: hint,
-	}
+	def hint(hint):
+		self.act = HINT
+		self.hint = hint
 
-def play(loc):
-	return {
-		ACT: PLAY,
-		LOC: loc,
-	}
+	def play(loc):
+		self.act = PLAY
+		self.loc = loc
 
-def discard(loc):
-	return {
-		ACT: DISCARD,
-		LOC: loc,
-	}
+	def discard(loc):
+		self.act = DISCARD
+		self.loc = loc
 
-def populateLocs(action, hand):
-	if action[ACT] != HINT:
+	def populateLocs(action, hand):
+		if action.act != HINT:
+			return action
+		locs = []
+		for index, card in enumerate(hand):
+			if action.hint in COLOR and card[1] == action.hint:
+				locs.append(index)
+			if (not action.hint in COLOR) and int(card[0]) == int(action.hint):
+				locs.append(index)
+		action.locs = locs
 		return action
-	locs = []
-	for index, card in enumerate(hand):
-		if action[HINT] in COLOR and card[1] == action[HINT]:
-			locs.append(index)
-		if (not action[HINT] in COLOR) and int(card[0]) == int(action[HINT]):
-			locs.append(index)
-	action[LOCS] = locs
-	return action
 
-def isHint(action):
-	return action[ACT] == HINT
+	def isHint(self):
+		return self.act == HINT
 
-def isPlay(action):
-	return action[ACT] == PLAY
+	def isPlay(self):
+		return self.act == PLAY
 
-def isDiscard(action):
-	return action[ACT] == DISCARD
+	def isDiscard(self):
+		return self.act == DISCARD
 
-def isActionValid(action):
-	if not isHint(action):
-		return True
-	return len(action[LOCS]) > 0
+	def isActionValid(self):
+		if not self.isHint():
+			return True
+		return len(self.locs) > 0
 
-def getAllHints():
-	return [hint(x) for x in xrange(1, len(DECK_DISTRIBUTION[COLOR[0]]))] + \
-		[hint(x) for x in COLOR]
+	def getAllHints():
+		return [hint(x) for x in xrange(1, len(DECK_DISTRIBUTION[COLOR[0]]))] + \
+			[hint(x) for x in COLOR]
 

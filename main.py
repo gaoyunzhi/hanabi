@@ -28,13 +28,13 @@ count = 0
 scores = []
 for file in all_filenames:
 	example_file = file[0] + file[1]
-	if file[1][:4] != "0002":
-		continue
+	# if file[1][:4] != "0009":
+	# 	continue
 	judge = Judge(getDeck(example_file))
 	player1 = Player(judge, "player1")
 	player2 = Player(judge, "player2")
 	judge.takePlayer([player1, player2])
-	# judge.byStep = True
+	judge.byStep = True
 	# judge.setMute()
 	judge.start()
 	score = judge.getScore()	
