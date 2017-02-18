@@ -1,14 +1,6 @@
 from hanabi_player_interface import HanabiPlayerInterface
-from const import DECK_DISTRIBUTION
-from const import NUM_CARDS_IN_HAND
-from const import COLOR
-from public_info import noToken, tokenFull
-from state import getInitState, copyState, \
-	updateFromOwnAction, updateFromOtherAction, updateFromPublicInfo, \
-	getCertainActionFromState, getDiscardAction, getAtomString, scoreState, STATE
-from action import isDiscard, getAllHints, isHint, populateLocs, LOCS
-
-MAX = 10000000
+from const import DECK_DISTRIBUTION, NUM_CARDS_IN_HAND, COLOR, P, D
+from action import Action
 
 class Player(HanabiPlayerInterface) :
 	def __init__(self, judge, label):
@@ -18,49 +10,90 @@ class Player(HanabiPlayerInterface) :
 		self._otherState = getInitState()
 
 	def postAct(self, action, player_index):
-		if player_index == 1:
-			updateFromOtherAction(self._myState, self._otherState, action, self._judge.publicInfo)
-			updateFromOwnAction(self._otherState, action)
+		if player_index == 0:
+			self._otherState.updateFromOtherAction(self._myState, action, self._judge.publicInfo)
+			self._myState.updateFromOwnAction(action)
 		else:
-			updateFromOtherAction(self._otherState, self._myState, action, self._judge.publicInfo)
-			updateFromOwnAction(self._myState, action)
+			self._myState.updateFromOtherAction(self._otherState, action, self._judge.publicInfo)
+			self._otherState.updateFromOwnAction(action)
 
 	def getOthersHand(self):
-		return self._getOtherHand(self._otherState)
-
-	def _getOtherHand(self, original_state):
 		result = []
-		state = copyState(original_state)
-		updateFromPublicInfo(state, self._judge.publicInfo)
+		state = self._otherState.copy()
+		state.updateFromPublicInfo(self._judge.publicInfo)
 		for index, card in enumerate(self._judge.getOthersHand(self)):
-			result.append(getAtomString(index, state[STATE][index], state, card))
+			result.append(state.cards[index].getString(card))
 		return result
 
 	def act(self):
-		updateFromPublicInfo(self._otherState, self._judge.publicInfo)
-		updateFromPublicInfo(self._myState, self._judge.publicInfo)
-		# TODO: integrate private info
-		possibilities = self.getPossibleActions()
-		if not noToken(self._judge.publicInfo):
-			possibilities += getAllHints()
-		score = - MAX
-		action = None
-		for possibility in possibilities:
-			possibility = populateLocs(possibility, self._judge.getOthersHand(self))
-			if isHint(possibility) and len(possibility[LOCS]) == 0:
-				continue
-			otherState = copyState(self._otherState)
-			updateFromOtherAction(otherState, self._myState, possibility, self._judge.publicInfo)
-			new_score = scoreState(otherState, self._myState, self._judge.publicInfo, 
-				possibility, self._judge.getOthersHand(self))
-			# print new_score, possibility, self._getOtherHand(otherState)
-			(score, action) = max((score, action), (new_score, possibility))
-		return action
+		self._otherState.updateFromPublicInfo(self._judge.publicInfo)
+		self._myState.updateFromPublicInfo(self._judge.publicInfo)
+		if self._judge.publicInfo.token == 0 and self.getMyPlay():
+			return self.getMyActionWithScore()[0]
+		# token > 0
+		if self.getPlayHint():
+			return self.getPlayHint()
+		score1, colorHint = self.getColorHintWithScore()
+		score2, myAction = self.getMyActionWithScore()
+		if score1 > score2:
+			return colorHint
+		else:
+			return myAction
 
-	def getPossibleActions(self):
-		actions = getCertainActionFromState(self._myState)
-		if tokenFull(self._judge.publicInfo):
-			actions = [action for action in actions if not isDiscard(action)]
-		elif not actions:
-			actions.append(getDiscardAction(self._myState))
+	def getPlayHint(self):
+		if not set(otherhand) & p:
+			return None
+		base_line = self._otherState.getPlayScore(self._judge.publicInfo, self._myState, hand)
+		otherhand = self._judge.getOthersHand(self)
+		res = []
+		for i in xrange(1, len(DECK_DISTRIBUTION[COLOR[0]])):
+			action = Action.hint(i)
+			action.populateLocs(otherhand)
+			if not action.locs:
+				continue
+			self._otherState.copy()
+			self._otherState.updateFromOtherAction(self._myState, action, self._judge.publicInfo)
+			new_score = self._otherState.getPlayScore(self._judge.publicInfo, self._myState, hand)
+			if new_score >= 0.6 + base_line:
+				res.append((new_score, action))
+		if not res:
+			return None
+		return max(res)[1]
+
+	def getMyActionWithScore(self):
+		base_line = self._otherState.getDiscardScore(self._judge.publicInfo, self._myState, hand)
+		actions = self.getPossibleActions()
+		if not actions:
+			return None, -10 # token full
+		res = []
+		for a, loc in actions:
+			action = Action()
+			action.act = a
+			action.loc = loc
+			self._otherState.copy()
+			self._otherState.updateFromOtherAction(self._myState, action, self._judge.publicInfo)
+			new_score = self._otherState.getDiscardScore(self._judge.publicInfo, self._myState, hand)
+			res.append(new_score - baseline + self.state.cards[loc].getActionScore(), action)
+		return max(res)
+
+	def getColorHintWithScore(self):
+		base_line = self._otherState.getDiscardScore(self._judge.publicInfo, self._myState, hand)
+		otherhand = self._judge.getOthersHand(self)
+		res = []
+		for i in xrange(1, COLOR):
+			action = Action.hint(i)
+			action.populateLocs(otherhand)
+			if not action.locs:
+				continue
+			self._otherState.copy()
+			self._otherState.updateFromOtherAction(self._myState, action, self._judge.publicInfo)
+			new_score = self._otherState.getDiscardScore(self._judge.publicInfo, self._myState, hand)
+			res.append((new_score - baseline, action))
+		return max(res)
+
+	def getPossibleActions(self, meHint=False):
+		actions = self._myState.getCertainActionPrivate(
+			self._judge.publicInfo, self._otherState, self._judge.getOthersHand(self))
+		if self._judge.publicInfo.tokenFull() and not meHint:
+			actions = [action for action in actions if not action[0] == D]		
 		return actions

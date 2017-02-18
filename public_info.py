@@ -1,19 +1,4 @@
-from const import TOKEN_INIT, BOOM_LIMIT, ROUND_AFTER_DECK_EMPTY
-from const import DECK_DISTRIBUTION
-from const import NUM_CARDS_IN_HAND
-from action import isHint
-from action import isPlay
-from action import isDiscard
-from action import LOC
-
-ROUND = "round"
-DESK = "desk"
-DISCARD_DECK = "discard_deck"
-TOKEN = "token"
-BOOM = "boom"
-ACT_AFTER_EMPTY = "act_after_empty"
-NUM_PLAYER = "num_player"
-NUM_CARDS_IN_DECK = "num_cards_in_deck"
+from const import TOKEN_INIT, BOOM_LIMIT, ROUND_AFTER_DECK_EMPTY, DECK_DISTRIBUTION, NUM_CARDS_IN_HAND
 
 def PublicInfo(object):
 	def __init__(self, num_player):
@@ -32,7 +17,7 @@ def PublicInfo(object):
 		self.act_after_empty = 0
 		self.num_cards_in_deck = total_card
 
-	getStringPublicInfo(public_info):
+	def getString(self):
 		result = "#" + str(self.round) + " DESK: "
 		for c in self.desk:
 			result += c + str(self.desk[c]) + " "
@@ -45,9 +30,9 @@ def PublicInfo(object):
 		for c in DECK_DISTRIBUTION:
 			discard[c].sort()
 			result += c + "".join(discard[c]) + " "
-		result += " TOKEN:" + str(public_info.token)
+		result += " TOKEN:" + str(self.token)
 		if public_info.boom:
-			result += " BOOM:" + str(public_info.boom)
+			result += " BOOM:" + str(self.boom)
 		return result
 
 	def copy(self):
@@ -58,110 +43,120 @@ def PublicInfo(object):
 		public_info.token = self.token
 		public_info.boom = self.boom
 		public_info.act_after_empty = self.act_after_empty
-		public_info.num_cards_in_deck = self.num_cards_in_deck
+		public_info.num_cards_in_deck: = self.num_cards_in_deck
+		return public_info
 	
+	def update(self, action, hand):
+		self.round += 1
+		if action.isHint():
+			self.token -= 1
+			return
+		if self.num_cards_in_deck::
+			self.num_cards_in_deck: -= 1
+		else:
+			self.act_after_empty += 1
 
-def updatePublicInfo(public_info, action, hand):
-	self.round += 1
-	if isHint(action):
-		public_info.token -= 1
-		return
-	if public_info.num_cards_in_deck:
-		public_info.num_cards_in_deck -= 1
-	else:
-		public_info.act_after_empty += 1
-
-	card = hand[action[LOC]]
-	hand.pop(action[LOC])
-	if isPlay(action):
-		public_info = _playCard(public_info, card)
-	else:
-		public_info.token += 1
-		public_info = _discardCard(public_info, card)
+		card = hand[action.loc]
+		hand.pop(action.loc)
+		if action.isPlay():
+			self.playCard(card)
+		else:
+			self.token += 1
+			self.discardCard(card)
 	
-def canPlay(public_info, card):
-	return int(self.desk[card[1]]) + 1 == int(card[0])
+	def canPlay(self, card):
+		return int(self.desk[card[1]]) + 1 == int(card[0])
 
-def _playCard(public_info, card):
-	if canPlay(public_info, card):
-		self.desk[card[1]] += 1
-		if int(card[0]) == len(DECK_DISTRIBUTION[card[1]]) - 1 and \
-			public_info.token < TOKEN_INIT:
-			public_info.token += 1
-	else:
-		public_info.boom += 1
-		public_info = _discardCard(public_info, card)
-	return public_info
+	def playCard(self, card):
+		if self.canPlay(card):
+			self.desk[card[1]] += 1
+			if int(card[0]) == len(DECK_DISTRIBUTION[card[1]]) - 1 and \
+				self.token < TOKEN_INIT:
+				self.token += 1
+		else:
+			public_info.boom += 1
+			public_info = self.discardCard(card)
+		return public_info
 
-def _discardCard(public_info, card):
-	self.discard_deck[card] = \
-		self.discard_deck.get(card, 0) + 1
-	return public_info
+	def discardCard(self, card):
+		self.discard_deck[card] = self.discard_deck.get(card, 0) + 1
+		return public_info
 
-def _isPublicInfoValid(public_info):
-	return public_info.token <= TOKEN_INIT and \
-		public_info.token >= 0 and \
-		public_info.boom <= BOOM_LIMIT
+	def isPublicInfoValid(self):
+		return self.token <= TOKEN_INIT and self.token >= 0 and \
+			public_info.boom <= BOOM_LIMIT
 
-def isGameEnds(public_info):
-	if not _isPublicInfoValid(public_info):
-		return True
-	return public_info.act_after_empty == ROUND_AFTER_DECK_EMPTY * public_info.num_player
+	def isGameEnds(self):
+		if not self.isPublicInfoValid():
+			return True
+		return self.act_after_empty == ROUND_AFTER_DECK_EMPTY * public_info.num_player
 
-def getScore(public_info):
-	if not _isPublicInfoValid(public_info):
-		return 0
-	return sum(self.desk.values())
+	def getScore(self):
+		if not _isPublicInfoValid(self):
+			return 0
+		return sum(self.desk.values())
 
-def noToken(public_info):
-	return public_info.token == 0
+	def noToken(self):
+		return self.token == 0
 
-def tokenFull(public_info):
-	return public_info.token == TOKEN_INIT
+	def tokenFull(self):
+		return self.token == TOKEN_INIT
 
-def getPlayableCards(public_info):
-	cards = set()
-	for c in self.desk:
-		num = self.desk[c] + 1
-		if num == len(DECK_DISTRIBUTION[c]):
-			continue
-		cards.add(str(num) + c)
-	return cards
-
-def getDiscardableCards(public_info):
-	cards = set()
-	for c in self.desk:
-		for num in xrange(1, self.desk[c] + 1):
+	def getPlayableCards(self):
+		cards = set()
+		for c in self.desk:
+			num = self.desk[c] + 1
+			if num == len(DECK_DISTRIBUTION[c]):
+				continue
 			cards.add(str(num) + c)
-	return cards
+		return cards
 
-def getUndiscardbleCards(public_info):
-	cards = set()
-	for c in self.desk:
-		for num in xrange(self.desk[c] + 1, len(DECK_DISTRIBUTION[c])):
-			card = str(num) + c
-			if self.discard_deck.get(card, 0) + 1 == DECK_DISTRIBUTION[c][num]:
-				cards.add(card)
-	return cards
+	def getDiscardableCards(self):
+		cards = set()
+		for c in self.desk:
+			for num in xrange(1, self.desk[c] + 1):
+				cards.add(str(num) + c)
+			flag = False
+			for num in xrange(self.desk[c] + 1, len(DECK_DISTRIBUTION[c])):
+				if self.discard_deck.get(card, 0) == DECK_DISTRIBUTION[c][num]:
+					flag = True
+				if flag:
+					cards.add(str(num) + c)
+		return cards
 
-def getSuggestDiscardCards(public_info):
-	cards = set()
-	for c in self.desk:
-		for num in xrange(self.desk[c] + 4, len(DECK_DISTRIBUTION[c])):
-			card = str(num) + c
-			if self.discard_deck.get(card, 0) + 1 != DECK_DISTRIBUTION[c][num]:
-				cards.add(card)
-	return cards
+	def getUndiscardbleCards(self):
+		cards = set()
+		for c in self.desk:
+			for num in xrange(self.desk[c] + 1, len(DECK_DISTRIBUTION[c])):
+				card = str(num) + c
+				if self.discard_deck.get(card, 0) + 1 == DECK_DISTRIBUTION[c][num]:
+					cards.add(card)
+				if self.discard_deck.get(card, 0) == DECK_DISTRIBUTION[c][num]:
+					break
+		return cards
 
-def getPossibleHandCards(public_info):
-	cards = set()
-	for c in self.desk:
-		for num in xrange(1, len(DECK_DISTRIBUTION[c])):
-			card = str(num) + c
-			current_number = self.discard_deck.get(card, 0)
-			if num <=  self.desk[c]:
-				current_number += 1
-			if current_number < DECK_DISTRIBUTION[c][num]:
-				cards.add(card)
-	return cards
+	def getSuggestDiscardCards(self):
+		cards = set()
+		for c in self.desk:
+			for num in xrange(self.desk[c] + 3, len(DECK_DISTRIBUTION[c])):
+				card = str(num) + c
+				if self.discard_deck.get(card, 0) + 1 != DECK_DISTRIBUTION[c][num]:
+					cards.add(card)
+		return cards
 
+	def getPossibleHandCards(self):
+		cards = set()
+		for c in self.desk:
+			for num in xrange(1, len(DECK_DISTRIBUTION[c])):
+				card = str(num) + c
+				current_number = self.discard_deck.get(card, 0)
+				if num <=  self.desk[c]:
+					current_number += 1
+				if current_number < DECK_DISTRIBUTION[c][num]:
+					cards[card] = DECK_DISTRIBUTION[c][num] - current_number
+		return cards
+
+	def getSuggestedSets(self):
+		return [self.getPlayableCards(), self.getDiscardableCards(), 
+			self.getUndiscardbleCards(), self.getSuggestDiscardCards(),
+			self.getPossibleHandCards()]

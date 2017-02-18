@@ -1,12 +1,6 @@
-from const import NUM_CARDS_IN_HAND
-from const import TOKEN_INIT
-from const import COLOR
-from const import BOOM_LIMIT
-from const import ROUND_AFTER_DECK_EMPTY
-from const import DECK_DISTRIBUTION
 import sys, tty, termios, os
-from public_info import getInitialPublicInfo, isGameEnds, getScore, updatePublicInfo, getStringPublicInfo
-from action import populateLocs, isActionValid
+from public_info import publicInfo
+from const import NUM_CARDS_IN_HAND
 
 class Judge(object):
     def __init__(self, deck):
@@ -16,7 +10,7 @@ class Judge(object):
         self._hands = {}
 
     def takePlayer(self, players):
-        self.publicInfo = getInitialPublicInfo(len(players))
+        self.publicInfo = publicInfo(len(players))
         self._players = players
         for player in self._players:
             self._hands[player] = []
@@ -32,13 +26,13 @@ class Judge(object):
                     c = self._getch()
                     if c == "c":
                         exit(0)
-                action = populateLocs(player.act(), self._hands[self._getOther(player)])
+                action = player.act().populateLosd(self._hands[self._getOther(player)])
                 if not self.mute:
                     print player.label, action
                 for other_player_index, other_player in enumerate(self._players):
                     other_player.postAct(action, 
                         (other_player_index - player_index + len(self._players)) % len(self._players))
-                updatePublicInfo(self.publicInfo, action, self._hands[player])
+                self.publicInfo.update(action, self._hands[player])
                 self._sendCard(player)
                 if self._isGameEnds(action):
                     break
@@ -64,8 +58,7 @@ class Judge(object):
         return len(self._hands[self._getOther(player)])
 
     def _isGameEnds(self, action):
-        return (action and not isActionValid(action)) or \
-            isGameEnds(self.publicInfo)
+        return (action and not action.isValid()) or self.publicInfo.isGameEnds()
 
     def _gameEnds(self):
         self._printGameStatus()
@@ -78,7 +71,7 @@ class Judge(object):
     def _printGameStatus(self):
         if self.mute:
             return
-        print getStringPublicInfo(self.publicInfo)
+        print self.publicInfo.getString()
         for player in self._players:
             print player.label, self._getOther(player).getOthersHand()
 

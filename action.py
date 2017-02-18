@@ -1,8 +1,4 @@
-from const import COLOR, DECK_DISTRIBUTION
-
-PLAY = "play"
-DISCARD = "discard"
-HINT = "hint"
+from const import COLOR, DECK_DISTRIBUTION, P, D, H
 
 class Action(object):
 	def __init__(self):
@@ -10,19 +6,19 @@ class Action(object):
 		self.loc = None
 
 	def hint(hint):
-		self.act = HINT
+		self.act = H
 		self.hint = hint
 
 	def play(loc):
-		self.act = PLAY
+		self.act = P
 		self.loc = loc
 
 	def discard(loc):
-		self.act = DISCARD
+		self.act = D
 		self.loc = loc
 
 	def populateLocs(action, hand):
-		if action.act != HINT:
+		if action.act != H:
 			return action
 		locs = []
 		for index, card in enumerate(hand):
@@ -34,13 +30,13 @@ class Action(object):
 		return action
 
 	def isHint(self):
-		return self.act == HINT
+		return self.act == H
 
 	def isPlay(self):
-		return self.act == PLAY
+		return self.act == P
 
 	def isDiscard(self):
-		return self.act == DISCARD
+		return self.act == D
 
 	def isActionValid(self):
 		if not self.isHint():
