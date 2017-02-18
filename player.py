@@ -51,9 +51,10 @@ class Player(HanabiPlayerInterface) :
 			action.populateLocs(otherhand)
 			if not action.locs:
 				continue
-			self._otherState.copy()
-			self._otherState.updateFromOtherAction(self._myState, action, self._judge.publicInfo)
-			new_score = self._otherState.getPlayScore(self._judge.publicInfo, self._myState, hand)
+			new_state = self._otherState.copy()
+			new_state.updateFromOtherAction(self._myState, action, self._judge.publicInfo)
+			new_score = new_state.getPlayScore(self._judge.publicInfo, self._myState, hand) + \
+				new_state.getStateAdjuestScore(self._judge.publicInfo, self._otherState, hand)
 			if new_score >= 0.6 + base_line:
 				res.append((new_score, action))
 		if not res:
@@ -70,9 +71,10 @@ class Player(HanabiPlayerInterface) :
 			action = Action()
 			action.act = a
 			action.loc = loc
-			self._otherState.copy()
-			self._otherState.updateFromOtherAction(self._myState, action, self._judge.publicInfo)
-			new_score = self._otherState.getDiscardScore(self._judge.publicInfo, self._myState, hand)
+			new_state = self._otherState.copy()
+			new_state.updateFromOtherAction(self._myState, action, self._judge.publicInfo)
+			new_score = new_state.getDiscardScore(self._judge.publicInfo, self._myState, hand) - \
+				action.getDiscardPenalty(self._judge.publicInfo, oh)
 			res.append(new_score - baseline + self.state.cards[loc].getActionScore(), action)
 		return max(res)
 
@@ -85,9 +87,10 @@ class Player(HanabiPlayerInterface) :
 			action.populateLocs(otherhand)
 			if not action.locs:
 				continue
-			self._otherState.copy()
-			self._otherState.updateFromOtherAction(self._myState, action, self._judge.publicInfo)
-			new_score = self._otherState.getDiscardScore(self._judge.publicInfo, self._myState, hand)
+			new_state = self._otherState.copy()
+			new_state = self._otherState.updateFromOtherAction(self._myState, action, self._judge.publicInfo)
+			new_score = new_state.getDiscardScore(self._judge.publicInfo, self._myState, hand) + \
+				new_state.getStateAdjuestScore(self._judge.publicInfo, self._myState, self._otherState, hand)
 			res.append((new_score - baseline, action))
 		return max(res)
 

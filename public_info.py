@@ -43,7 +43,7 @@ def PublicInfo(object):
 		public_info.token = self.token
 		public_info.boom = self.boom
 		public_info.act_after_empty = self.act_after_empty
-		public_info.num_cards_in_deck: = self.num_cards_in_deck
+		public_info.num_cards_in_deck = self.num_cards_in_deck
 		return public_info
 	
 	def update(self, action, hand):
@@ -51,8 +51,8 @@ def PublicInfo(object):
 		if action.isHint():
 			self.token -= 1
 			return
-		if self.num_cards_in_deck::
-			self.num_cards_in_deck: -= 1
+		if self.num_cards_in_deck:
+			self.num_cards_in_deck -= 1
 		else:
 			self.act_after_empty += 1
 

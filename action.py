@@ -1,4 +1,4 @@
-from const import COLOR, DECK_DISTRIBUTION, P, D, H
+from const import COLOR, DECK_DISTRIBUTION, P, D, H, ROUND_AFTER_DECK_EMPTY
 
 class Action(object):
 	def __init__(self):
@@ -38,12 +38,24 @@ class Action(object):
 	def isDiscard(self):
 		return self.act == D
 
-	def isActionValid(self):
+	def isValid(self):
 		if not self.isHint():
 			return True
 		return len(self.locs) > 0
 
-	def getAllHints():
-		return [hint(x) for x in xrange(1, len(DECK_DISTRIBUTION[COLOR[0]]))] + \
-			[hint(x) for x in COLOR]
+	def getDiscardPenalty(self, public_info, oh):
+		if not self.isDiscard():
+			return 0
+		p, d, k, s, a = public_info.getSuggestedSets()
+		if not set(oh) & p:
+			return 0
+		round_can_discard = public_info.num_cards_in_deck + ROUND_AFTER_DECK_EMPTY * public_info.num_player \
+			- public_info.act_after_empty - len(a - d)
+		if round_can_discard < 0:
+			return -1
+		if round_can_discard > 3:
+			return 0
+		return [0.2, 0.3, 0.4][round_can_discard]
+
+
 

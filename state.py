@@ -32,7 +32,7 @@ class State(object):
 		self.discard_rank = new_discard_rank
 
 	def getSuggestedSets(self, public_info, others_state, oh = []):
-		p, d, k, s, a, _ = public_info.getSuggestedSets()
+		p, d, k, s, a = public_info.getSuggestedSets()
 		other_cards = [c.toCard(a.keys()) for c in others_state.cards]
 		other_cards = [c for c in other_cards if c]
 		my_cards = [c.toCard(a.keys()) for c in self.cards]
@@ -69,7 +69,7 @@ class State(object):
 		if hand[index] in k:
 			return -1
 		step = int(hand[index][0]) - public_info.desk[hand[index][1]]
-		return [0.15, 0, None][step]
+		return [0.05, -0.05, None][step]
 
 	def getPlayScore(self, public_info, others_state, hand):
 		ss = self.getSuggestedSets(public_info, others_state)
@@ -290,6 +290,24 @@ class Card(object):
 			return 0.15
 		else:
 			return -1
+
+	def getStateAdjuestScore(public_info, orig_state, other_state, hand):
+		p, d, k, s, a, _ = self.getSuggestedSets(public_info, other_state, hand)
+		adjust = 0.0
+		for i, old_card in enumerate(orig_state.cards):
+			new_card = self.cards[i]
+			if hand[i] in d:
+				continue
+			if len(old_card.pos) = len(new_card.pos):
+				continue
+			if len(old_card.getPossibleSet(a - d)) == len(new_card.getPossibleSet(a - d)):
+				continue
+			hint = next(iter(new_card.pos - old_card.pos))
+			if hint in COLOR:
+				adjust += 0.01
+			else:
+				adjust += 0.02
+		return adjust
 
 	def getAction(self, [p, d, k, s, a, oh]):
 		possibleSet = self.getPossibleSet(a)

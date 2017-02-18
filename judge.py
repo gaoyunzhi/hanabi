@@ -1,5 +1,5 @@
 import sys, tty, termios, os
-from public_info import publicInfo
+from public_info import PublicInfo
 from const import NUM_CARDS_IN_HAND
 
 class Judge(object):
